@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Journey — Evento Badges</title>
+<style>
+  :root{
+    --luma:#16a34a; --partial:#d97706; --nope:#dc2626;
+    --bg:#0f172a; --card:#1e293b; --txt:#e2e8f0; --muted:#94a3b8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Segoe UI,Arial,sans-serif}
+  body{background:var(--bg);color:var(--txt);padding:32px;line-height:1.5}
+  h1{font-size:26px;margin-bottom:4px}
+  .sub{color:var(--muted);margin-bottom:24px}
+  .legend{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:32px;font-size:14px}
+  .legend span{display:flex;align-items:center;gap:8px}
+  .dot{width:14px;height:14px;border-radius:4px;display:inline-block}
+  .flow{display:flex;flex-direction:column;gap:0}
+  .step{display:flex;align-items:stretch;gap:0}
+  .num{min-width:56px;display:flex;align-items:center;justify-content:center;
+       font-size:24px;font-weight:800;color:#fff}
+  .card{flex:1;background:var(--card);border-left:6px solid var(--muted);
+        border-radius:10px;padding:16px 20px;margin:6px 0}
+  .card.luma{border-left-color:var(--luma)}
+  .card.partial{border-left-color:var(--partial)}
+  .card.nope{border-left-color:var(--nope)}
+  .card h3{font-size:17px;margin-bottom:4px}
+  .card p{color:var(--muted);font-size:14px}
+  .tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;
+       border-radius:20px;margin-top:8px}
+  .tag.luma{background:rgba(22,163,74,.2);color:#4ade80}
+  .tag.partial{background:rgba(217,119,6,.2);color:#fbbf24}
+  .tag.nope{background:rgba(220,38,38,.2);color:#f87171}
+  .arrow{text-align:center;color:var(--muted);font-size:20px;margin-left:56px}
+  .box{margin-top:36px;padding:20px;border-radius:12px;background:var(--card)}
+  .box h2{font-size:18px;margin-bottom:12px}
+  .box ul{margin-left:18px}.box li{margin-bottom:6px;font-size:14px}
+  .cost{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}
+  .cost div{flex:1;min-width:220px;background:#0b1220;border-radius:10px;padding:16px}
+  .cost b{color:#fff}
+  .price{font-size:22px;font-weight:800;margin:6px 0}
+  .g{color:#4ade80}.r{color:#f87171}
+</style>
+</head>
+<body>
+  <h1>Customer Journey — Evento 50 invitados</h1>
+  <div class="sub">Registro → Confirmación → Badge → Check-in → Certificados · ¿hasta dónde llega Luma?</div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--luma)"></i> Luma free lo cubre</span>
+    <span><i class="dot" style="background:var(--partial)"></i> Luma parcial / limitado</span>
+    <span><i class="dot" style="background:var(--nope)"></i> Luma NO → construyes tú</span>
+  </div>
+
+  <div class="flow">
+    <div class="step"><div class="num" style="background:var(--luma)">1</div>
+      <div class="card luma"><h3>Descubrimiento</h3><p>Landing del evento, página pública.</p>
+      <span class="tag luma">Luma free</span></div></div>
+    <div class="arrow">↓</div>
+
+    <div class="step"><div class="num" style="background:var(--partial)">2</div>
+      <div class="card partial"><h3>Registro asistente</h3><p>Form: nombre, email, rol, FOTO. Luma free limita foto/campos custom.</p>
+      <span class="tag partial">Luma parcial · foto = form propio</span></div></div>
+    <div class="arrow">↓</div>
+
+    <div class="step"><div class="num" style="background:var(--luma)">3</div>
+      <div class="card luma"><h3>Curación / Aprobación</h3><p>Organizador revisa y aprueba quién entra (approval ON).</p>
+      <span class="tag luma">Luma free</span></div></div>
+    <div class="arrow">↓ aprueba &nbsp;|&nbsp; rechaza → 3b</div>
+
+    <div class="step"><div class="num" style="background:var(--luma)">3b</div>
+      <div class="card luma"><h3>Rechazo / Waitlist</h3><p>Cupo lleno o no aprobado → lista de espera.</p>
+      <span class="tag luma">Luma free</span></div></div>
+    <div class="arrow">↓</div>
+
+    <div class="step"><div class="num" style="background:var(--luma)">4</div>
+      <div class="card luma"><h3>Confirmado</h3><p>Email "estás dentro".</p>
+      <span class="tag luma">Luma free</span></div></div>
+    <div class="arrow">↓</div>
+
+    <div class="step"><div class="num" style="background:var(--luma)">5</div>
+      <div class="card luma"><h3>Recordatorios</h3><p>T-24h / T-2h por email.</p>
+      <span class="tag luma">Luma free</span></div></div>
+    <div class="arrow">↓</div>
+
+    <div class="step"><div class="num" style="background:var(--nope)">6</div>
+      <div class="card nope"><h3>Generar BADGE</h3><p>Foto + branding + QR + nombre. Luma no genera esto.</p>
+      <span class="tag nope">Construyes tú · satori</span></div></div>
+    <div class="arrow">↓</div>
+
+    <div class="step"><div class="num" style="background:var(--nope)">7</div>
+      <div class="card nope"><h3>Envío badge multicanal</h3><p>Email + WhatsApp + link descarga. WhatsApp no existe en Luma.</p>
+      <span class="tag nope">Construyes tú · Resend + wa.me</span></div></div>
+    <div class="arrow">↓</div>
+
+    <div class="step"><div class="num" style="background:var(--luma)">8</div>
+      <div class="card luma"><h3>Check-in QR</h3><p>Escanea en puerta, valida no-duplicado.</p>
+      <span class="tag luma">Luma app (o propio)</span></div></div>
+    <div class="arrow">↓</div>
+
+    <div class="step"><div class="num" style="background:var(--nope)">9</div>
+      <div class="card nope"><h3>Certificados</h3><p>PDF de asistencia post-evento. Luma no los hace.</p>
+      <span class="tag nope">Construyes tú · pdf-lib/satori</span></div></div>
+    <div class="arrow">↓</div>
+
+    <div class="step"><div class="num" style="background:var(--partial)">10</div>
+      <div class="card partial"><h3>Difusión / Follow-up / Analytics</h3><p>Métricas básicas en Luma free. Automatizar = API (Luma Plus, pago).</p>
+      <span class="tag partial">Luma parcial · API = Plus</span></div></div>
+  </div>
+
+  <div class="box">
+    <h2>Lo que SÍ o SÍ construyes tú (Luma no llega)</h2>
+    <ul>
+      <li><b>6</b> — Badge con foto + QR + branding</li>
+      <li><b>7</b> — Envío por WhatsApp (+ email)</li>
+      <li><b>9</b> — Certificados PDF</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <h2>Costo según camino</h2>
+    <div class="cost">
+      <div><b>Luma free + app propia</b>
+        <div class="price g">$0</div>
+        Luma cubre 1–5, 8. Export CSV manual → tu app hace 6,7,9.<br>
+        <span class="r">Contra:</span> sin API, sin tiempo-real, CSV a mano.</div>
+      <div><b>Luma Plus + API</b>
+        <div class="price">~$59/mes</div>
+        Todo automático, tiempo-real, badge/cert al confirmar.</div>
+      <div><b>Sin Luma (form propio)</b>
+        <div class="price g">$0</div>
+        Tally free webhook → tu app hace TODO. Tiempo-real.<br>
+        <span class="r">Contra:</span> construyes el registro.</div>
+    </div>
+  </div>
+</body>
+</html>
