@@ -20,7 +20,7 @@ Fuente idloom (6 estados): https://www.idloom.com/en/resources/managing-attendee
 Flujo registro CiviCRM: https://docs.civicrm.org/user/en/latest/events/online-event-registration/
 Waitlist Cvent: https://support.cvent.com/s/communityarticle/Managing-Waitlisted-Invitees
 
-## Repos para robar
+## Repos de apoyo y discovery
 | Repo | Qué es | Robable |
 |---|---|---|
 | HiEventsDev/Hi.Events | OSS tipo Eventbrite completo | data model + check-in QR (no levantar, solo leer) |
