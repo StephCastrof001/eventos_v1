@@ -1,7 +1,8 @@
 # PRD — Plataforma de Eventos (registro → badge → check-in → certificado)
 
 > Formato estilo `/to-prd` (mattpocock). Sintetiza la conversación previa. No re-entrevista.
-> Estado: v0.1 · Fecha: 2026-06-27 · Owner: Stephanie
+> Estado: v0.2 · Fecha: 2026-06-27 · Owner: Stephanie · Marca: HACK IA
+> Cambios v0.2: estrategia v1(Luma free CSV)→v2(inhouse) + puerto RegistroProvider; brand kit (paleta + Space Grotesk Bold); aprobación mixta; ver CONTEXT.md.
 
 ---
 
@@ -21,16 +22,34 @@ eventos**, que arranque con 1 evento.
 App web (Next.js) con flujo self-service por **magic link**:
 
 1. Asistente se **registra** (datos básicos, sin foto).
-2. Organizador **aprueba** a mano (curación). Sin cupo → **waitlist**.
+2. **Curación mixta**: auto-aprueba si hay cupo; organizador puede rechazar/expulsar. Sin cupo → **waitlist** (promoción manual).
 3. Aprobado recibe **mail con magic link**.
-4. Link abre página con datos precargados → **sube foto**.
-5. Sistema genera **QR + badge** → descarga + mail.
-6. **Recordatorio** D-2 / día.
-7. **Check-in** escaneando QR en puerta (valida token único, no duplicado).
-8. **Certificado PDF** post-evento a quien asistió.
+4. Link abre página con datos precargados → **sube foto (obligatoria)**.
+5. Sistema genera **QR + badge** (negro `#0c0c14` + logo HACK IA) → descarga + mail.
+6. **Recordatorio** manual (botón).
+7. **Check-in** escaneando QR en puerta (staff con celular, online, valida token único).
+8. **Certificado PDF** a todos los confirmados.
 
 Desacople: el generador de badge/certificado recibe `{nombre, rol, foto, qr, brand}` y
 no conoce el origen del registro. Multi-evento via `event_id` en el schema desde el día 1.
+
+### Estrategia de entrega — v1 simple → v2 desacoplada
+
+- **v1 (MVP, $0 con Luma free):** Luma hace registro/aprobación/recordatorio/check-in.
+  Guests salen por **CSV manual** (Luma free, sin Plus). Construir SOLO: leer guests →
+  magic link → subir foto → generar badge → enviar email. Validar rápido.
+- **v2 (inhouse desacoplada):** registro/dashboard/check-in propios (Supabase), Luma fuera.
+
+**Puerto para swap barato (desde v1):**
+```ts
+interface RegistroProvider {
+  getGuests(eventId: string): Promise<Guest[]>
+  onApproved(guest: Guest): Promise<void>   // dispara magic link
+}
+// v1: LumaProvider (CSV)  ·  v2: InhouseProvider (Supabase)
+```
+Badge/email/check-in dependen de `RegistroProvider`, NUNCA de Luma directo.
+Swap v1→v2 = escribir `InhouseProvider`, cero cambios en el resto (criterio C3).
 
 ## 3. Métrica de éxito (DoD del producto)
 
@@ -72,14 +91,19 @@ no conoce el origen del registro. Multi-evento via `event_id` en el schema desde
 | Jobs async | **Trigger.dev** (opcional, batch badges) | igual a crafter |
 | WhatsApp | **wa.me** (manual) → Kapso/Twilio (futuro pago) | crafter usa Kapso |
 | Deploy | **Vercel** free | — |
-| Dominio | **tuevento.com** (verificar DNS en Resend) | necesario para email no-spam |
+| Dominio | subdominio de **klipso** (Namecheap): `eventos.klipso.xxx` app + `send.klipso.xxx` email | gratis; email no-spam |
+| Fuente | **Space Grotesk Bold** (Google Fonts) → `assets/fonts/` para satori | brand HACK IA |
+| Imágenes marca | **Flux Dev / Midjourney v6** (fondos/social, NO el badge) | brand HACK IA |
+| Registro v1 | **Luma free + CSV** vía `LumaProvider` | $0, swappable por puerto |
 
 ### Schema (multi-evento desde día 1)
 
 ```
 events (
   id uuid pk, slug text unique, name text, date timestamptz,
-  location text, capacity int, brand jsonb,  -- {logo_url, color_primary, color_bg}
+  location text, capacity int, brand jsonb,
+  -- brand HACK IA: { logo_url, font:"Space Grotesk Bold",
+  --   palette:{ canvas:"#0c0c14", primary:"#6f5ff2", accent:"#00cfaa", text:"#e8e8f0" } }
   created_at timestamptz
 )
 
@@ -117,13 +141,20 @@ status enum:
 - Integración: registro → aprobación → mail → upload → badge → check-in (happy path).
 - Check-in: rechaza token duplicado / inexistente / de otro evento.
 
-## 7. Out of scope (v0.1)
+## 7. Out of scope
 
-- ❌ **Ponentes/speakers** — flujo distinto, lo maneja otra área. NO contemplar.
+**v1 (MVP):**
+- ❌ Form de registro propio + dashboard admin → lo hace Luma free en v1.
+- ❌ Certificados automáticos → v2.
+- ❌ State machine completa en DB → v1 trabaja desde CSV.
+- ❌ WhatsApp automático (v1 = wa.me manual).
+
+**Siempre fuera:**
+- ❌ **Ponentes/speakers** — flujo distinto, otra área. NO contemplar.
 - ❌ Pagos / tickets pagos.
 - ❌ App nativa / kiosk de impresión física.
-- ❌ Multi-tenant para terceros (solo multi-evento nuestro por ahora).
-- ❌ WhatsApp automático (v0.1 = wa.me manual).
+- ❌ Multi-tenant para terceros (solo multi-evento nuestro).
+- ❌ Check-in offline (asume wifi en puerta).
 
 ## 8. Módulos a tocar
 
