@@ -1,0 +1,236 @@
+<!doctype html>
+<!--
+  PROTOTYPE — badge HACK IA (issue #10). THROWAWAY, no es producción.
+  Pregunta: ¿cómo se ve el badge? (branch UI de /prototype)
+  Supuesto: aún no hay app Next; el badge final lo hace satori (HTML/CSS), así que
+  este mockup HTML traduce directo a satori. Brand real: logo + paleta + Space Grotesk.
+  Correr: abrir este archivo en el browser (Windows: `start prototype/badge-prototype.html`).
+  Switch: barra flotante abajo — Variante (A/B/C) + Tipo (Entrada con QR / Social sin QR).
+  Verdicto: anotar al final del archivo + en el commit, luego borrar o absorber en #6/#7.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PROTOTYPE — Badge HACK IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --canvas: #0c0c14;
+    --primary: #6f5ff2;
+    --accent: #00cfaa;
+    --text: #e8e8f0;
+    --muted: #9a9ab0;
+    --qrbg: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    background: #050509;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 16px 120px;
+  }
+  .stage { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; justify-content: center; }
+
+  /* ---------- badge base ---------- */
+  .badge {
+    width: 360px; height: 520px;
+    background: var(--canvas);
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+    display: none;            /* toggled by JS */
+    flex-direction: column;
+  }
+  .badge.show { display: flex; }
+  .logo { height: 26px; width: auto; }
+  .photo { object-fit: cover; background: #1a1a26; }
+  .name { font-weight: 700; line-height: 1.05; }
+  .role { color: var(--accent); font-weight: 500; }
+  .company { color: var(--muted); font-weight: 400; }
+  .qrtile { background: var(--qrbg); border-radius: 14px; padding: 10px; display: inline-flex; }
+  .qrtile img { display: block; width: 120px; height: 120px; }
+  .msg { font-weight: 700; line-height: 1.15; }
+  .msg .hl { color: var(--accent); }
+
+  /* ===== VARIANTE A — Clean Pass (centrado) ===== */
+  .vA { align-items: center; text-align: center; padding: 28px 24px; }
+  .vA .top { display: flex; justify-content: center; margin-bottom: 18px; }
+  .vA .photo { width: 150px; height: 150px; border-radius: 50%; border: 3px solid var(--primary); }
+  .vA .name { font-size: 30px; margin-top: 20px; }
+  .vA .uline { width: 48px; height: 4px; background: var(--primary); border-radius: 2px; margin: 12px auto; }
+  .vA .role { font-size: 16px; }
+  .vA .company { font-size: 13px; margin-top: 2px; }
+  .vA .foot { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+  /* ===== VARIANTE B — Editorial (barra lateral + alineado izq) ===== */
+  .vB { padding: 0; flex-direction: row; }
+  .vB .bar { width: 10px; background: linear-gradient(180deg, var(--primary), var(--accent)); }
+  .vB .body { flex: 1; padding: 24px 22px; display: flex; flex-direction: column; }
+  .vB .head { display: flex; justify-content: space-between; align-items: center; }
+  .vB .photo { width: 100%; height: 200px; border-radius: 16px; margin: 16px 0; }
+  .vB .name { font-size: 30px; text-align: left; }
+  .vB .chip { align-self: flex-start; background: rgba(111,95,242,.18); color: var(--accent); border: 1px solid var(--primary); padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; margin-top: 10px; }
+  .vB .company { font-size: 13px; margin-top: 8px; text-align: left; }
+  .vB .foot { margin-top: auto; display: flex; justify-content: flex-end; }
+
+  /* ===== VARIANTE C — Gradient Glow (vibrante) ===== */
+  .vC { padding: 28px 24px; align-items: center; text-align: center;
+        background:
+          radial-gradient(120px 120px at 50% 26%, rgba(111,95,242,.45), transparent 70%),
+          radial-gradient(160px 160px at 80% 90%, rgba(0,207,170,.30), transparent 70%),
+          var(--canvas); }
+  .vC .top { display:flex; justify-content:center; margin: 6px 0 16px; }
+  .vC .photo { width: 150px; height: 150px; border-radius: 50%;
+               border: 3px solid var(--accent); box-shadow: 0 0 0 6px rgba(0,207,170,.15); }
+  .vC .name { font-size: 30px; margin-top: 18px;
+              background: linear-gradient(90deg, var(--text), var(--accent));
+              -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .vC .role { font-size: 16px; margin-top: 6px; }
+  .vC .company { font-size: 13px; }
+  .vC .foot { margin-top: auto; display:flex; flex-direction:column; align-items:center; gap: 12px; }
+  .vC .qrtile { box-shadow: 0 8px 30px rgba(0,0,0,.4); }
+
+  .brandrow { display:flex; align-items:center; gap:8px; }
+  .tag { font-size: 11px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+
+  /* ---------- floating bar ---------- */
+  .bar-fixed {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: #14141f; border: 1px solid #2a2a3a; border-radius: 14px;
+    padding: 10px 14px; display: flex; gap: 18px; align-items: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5); z-index: 10;
+  }
+  .bar-fixed .grp { display:flex; gap:6px; align-items:center; }
+  .bar-fixed label { font-size: 11px; color: var(--muted); margin-right: 4px; }
+  .bar-fixed button {
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    background: #1f1f2e; color: var(--text); border: 1px solid #2a2a3a;
+    border-radius: 8px; padding: 6px 12px; cursor: pointer;
+  }
+  .bar-fixed button.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .state { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- ENTRADA (con QR) y SOCIAL (sin QR, con mensaje) por variante. JS muestra 1. -->
+
+    <!-- A -->
+    <div class="badge vA" data-v="a" data-t="entrada">
+      <div class="brandrow" style="justify-content:center"><img class="logo" src="../Logo/hackia_primary_dark.png" alt="HACK IA" onerror="this.style.display='none'"/></div>
+      <div class="top"><img class="photo" src="https://i.pravatar.cc/300?img=47" alt=""/></div>
+      <div class="name">Stephanie Castro</div>
+      <div class="uline"></div>
+      <div class="role">PM</div>
+      <div class="company">Klipso</div>
+      <div class="foot"><span class="tag">Entrada · escanear en puerta</span>
+        <div class="qrtile"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://eventos.klipso.xxx/r/SAMPLE-TOKEN" alt="QR"/></div>
+      </div>
+    </div>
+    <div class="badge vA" data-v="a" data-t="social">
+      <div class="brandrow" style="justify-content:center"><img class="logo" src="../Logo/hackia_primary_dark.png" alt="HACK IA" onerror="this.style.display='none'"/></div>
+      <div class="top"><img class="photo" src="https://i.pravatar.cc/300?img=47" alt=""/></div>
+      <div class="name">Stephanie Castro</div>
+      <div class="uline"></div>
+      <div class="role">PM</div>
+      <div class="company">Klipso</div>
+      <div class="foot"><div class="msg">Asistiré al lanzamiento de la comunidad <span class="hl">HACK IA</span></div></div>
+    </div>
+
+    <!-- B -->
+    <div class="badge vB" data-v="b" data-t="entrada">
+      <div class="bar"></div>
+      <div class="body">
+        <div class="head"><span class="tag">Entrada</span><img class="logo" src="../Logo/hackia_primary_dark.png" alt="HACK IA" onerror="this.style.display='none'"/></div>
+        <img class="photo" src="https://i.pravatar.cc/400?img=47" alt=""/>
+        <div class="name">Stephanie Castro</div>
+        <div class="chip">PM</div>
+        <div class="company">Klipso</div>
+        <div class="foot"><div class="qrtile"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://eventos.klipso.xxx/r/SAMPLE-TOKEN" alt="QR"/></div></div>
+      </div>
+    </div>
+    <div class="badge vB" data-v="b" data-t="social">
+      <div class="bar"></div>
+      <div class="body">
+        <div class="head"><span class="tag">HACK IA</span><img class="logo" src="../Logo/hackia_primary_dark.png" alt="HACK IA" onerror="this.style.display='none'"/></div>
+        <img class="photo" src="https://i.pravatar.cc/400?img=47" alt=""/>
+        <div class="name">Stephanie Castro</div>
+        <div class="chip">PM</div>
+        <div class="company">Klipso</div>
+        <div class="foot" style="justify-content:flex-start"><div class="msg" style="text-align:left">Asistiré al lanzamiento de la comunidad <span class="hl">HACK IA</span></div></div>
+      </div>
+    </div>
+
+    <!-- C -->
+    <div class="badge vC" data-v="c" data-t="entrada">
+      <div class="brandrow" style="justify-content:center"><img class="logo" src="../Logo/hackia_primary_dark.png" alt="HACK IA" onerror="this.style.display='none'"/></div>
+      <div class="top"><img class="photo" src="https://i.pravatar.cc/300?img=47" alt=""/></div>
+      <div class="name">Stephanie Castro</div>
+      <div class="role">PM</div>
+      <div class="company">Klipso</div>
+      <div class="foot"><span class="tag">Entrada · escanear en puerta</span>
+        <div class="qrtile"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://eventos.klipso.xxx/r/SAMPLE-TOKEN" alt="QR"/></div>
+      </div>
+    </div>
+    <div class="badge vC" data-v="c" data-t="social">
+      <div class="brandrow" style="justify-content:center"><img class="logo" src="../Logo/hackia_primary_dark.png" alt="HACK IA" onerror="this.style.display='none'"/></div>
+      <div class="top"><img class="photo" src="https://i.pravatar.cc/300?img=47" alt=""/></div>
+      <div class="name">Stephanie Castro</div>
+      <div class="role">PM</div>
+      <div class="company">Klipso</div>
+      <div class="foot"><div class="msg">Asistiré al lanzamiento de la comunidad <span class="hl">HACK IA</span></div></div>
+    </div>
+  </div>
+
+  <div class="bar-fixed">
+    <div class="grp"><label>Variante</label>
+      <button data-set="v" data-val="a">A · Clean</button>
+      <button data-set="v" data-val="b">B · Editorial</button>
+      <button data-set="v" data-val="c">C · Glow</button>
+    </div>
+    <div class="grp"><label>Tipo</label>
+      <button data-set="t" data-val="entrada">Entrada (QR)</button>
+      <button data-set="t" data-val="social">Social (sin QR)</button>
+    </div>
+    <span class="state" id="state"></span>
+  </div>
+
+<script>
+  const qs = new URLSearchParams(location.search);
+  let v = qs.get("v") || "a";
+  let t = qs.get("t") || "entrada";
+  function render() {
+    document.querySelectorAll(".badge").forEach(b => {
+      b.classList.toggle("show", b.dataset.v === v && b.dataset.t === t);
+    });
+    document.querySelectorAll(".bar-fixed button").forEach(btn => {
+      const set = btn.dataset.set, val = btn.dataset.val;
+      btn.classList.toggle("on", (set === "v" && val === v) || (set === "t" && val === t));
+    });
+    document.getElementById("state").textContent = `v=${v} · t=${t}`;
+    const u = new URL(location); u.searchParams.set("v", v); u.searchParams.set("t", t);
+    history.replaceState({}, "", u);
+  }
+  document.querySelectorAll(".bar-fixed button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.set === "v") v = btn.dataset.val; else t = btn.dataset.val;
+      render();
+    });
+  });
+  render();
+</script>
+
+<!--
+  ============ VERDICTO (#10 review gate) — llenar antes de borrar ============
+  Pregunta: ¿cómo se ve el badge?
+  Variante elegida:  [ A / B / C / mezcla ] -> ____
+  Tipo entrada/social OK? ____
+  Ajustes pedidos por owner: ____
+  -> Absorber la decisión en #6 (render base satori) y #7 (QR+brand). Luego borrar este archivo.
+-->
+</body>
+</html>
