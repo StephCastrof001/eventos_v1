@@ -3,6 +3,10 @@
 .env.local
 .env*.local
 
+# PII — datos personales reales (DNI/email/tel). NUNCA al repo (Ley 29733, ADR-001)
+Luma_test/
+*.csv
+
 # deps / build
 node_modules/
 .next/
