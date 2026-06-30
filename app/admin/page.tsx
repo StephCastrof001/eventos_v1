@@ -18,7 +18,8 @@ export default async function AdminPage(props: {
 		data: { user },
 	} = await auth.auth.getUser();
 
-	if (!user?.email) {
+	// email_confirmed_at: evita spoofing de email no verificado contra la allowlist.
+	if (!user?.email || !user.email_confirmed_at) {
 		redirect("/admin/login");
 	}
 	const allowed = getEnv()

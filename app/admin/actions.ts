@@ -20,7 +20,8 @@ async function requireAdmin(): Promise<void> {
 	const {
 		data: { user },
 	} = await auth.auth.getUser();
-	if (!user?.email) throw new Error("No autorizado");
+	// email_confirmed_at: evita spoofing de email no verificado contra la allowlist.
+	if (!user?.email || !user.email_confirmed_at) throw new Error("No autorizado");
 
 	const allowed = getEnv()
 		.ADMIN_EMAILS.split(",")
