@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { getEnv } from "@/lib/env";
+import {
+	createAdminSupabase,
+	createServerSupabase,
+} from "@/lib/supabase/server";
 import { approveGuest, rejectGuest } from "./actions";
 
 export default async function AdminPage(props: {
@@ -8,14 +12,25 @@ export default async function AdminPage(props: {
 	const searchParams = await props.searchParams;
 	const eventId = searchParams.eventId;
 
-	const sb = await createServerSupabase();
+	// Auth con cliente anon (sesión cookie); autorización por allowlist.
+	const auth = await createServerSupabase();
 	const {
 		data: { user },
-	} = await sb.auth.getUser();
+	} = await auth.auth.getUser();
 
-	if (!user) {
+	if (!user?.email) {
 		redirect("/admin/login");
 	}
+	const allowed = getEnv()
+		.ADMIN_EMAILS.split(",")
+		.map((e) => e.trim().toLowerCase())
+		.filter(Boolean);
+	if (!allowed.includes(user.email.toLowerCase())) {
+		redirect("/admin/login");
+	}
+
+	// Datos con service_role (la lectura de guests está bloqueada para anon por RLS).
+	const sb = createAdminSupabase();
 
 	if (!eventId) {
 		return (
