@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
+import { getEventGuests } from "@/lib/api/admin";
 import { getEnv } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getEventGuests } from "@/lib/api/admin";
 
-export async function GET(
-	request: Request,
-) {
+export async function GET(request: Request) {
 	// Obtener params
 	const url = new URL(request.url);
 	const eventId = url.searchParams.get("eventId");
@@ -64,18 +62,17 @@ export async function GET(
 			g.created_at || "",
 		]);
 
-		const csvContent =
-			[headers, ...rows]
-				.map((row) =>
-					row
-						.map((cell) => {
-							// Escape comillas y envolver en comillas
-							const str = String(cell).replace(/"/g, '""');
-							return `"${str}"`;
-						})
-						.join(","),
-				)
-				.join("\n");
+		const csvContent = [headers, ...rows]
+			.map((row) =>
+				row
+					.map((cell) => {
+						// Escape comillas y envolver en comillas
+						const str = String(cell).replace(/"/g, '""');
+						return `"${str}"`;
+					})
+					.join(","),
+			)
+			.join("\n");
 
 		// Retornar CSV
 		return new NextResponse(csvContent, {

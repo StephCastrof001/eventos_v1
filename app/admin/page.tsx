@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import { getEnv } from "@/lib/env";
-import { createServerSupabase } from "@/lib/supabase/server";
-import { getEvents, getEventGuests } from "@/lib/api/admin";
 import { EventCard } from "@/components/admin/EventCard";
 import { GuestTable } from "@/components/admin/GuestTable";
+import { getEventGuests, getEvents } from "@/lib/api/admin";
+import { getEnv } from "@/lib/env";
+import { createServerSupabase } from "@/lib/supabase/server";
 
 export default async function AdminPage(props: {
 	searchParams: Promise<{ eventId?: string }>;
@@ -33,26 +33,24 @@ export default async function AdminPage(props: {
 		const events = await getEvents();
 		return (
 			<div className="min-h-screen bg-[#0c0c14] text-[#e8e8f0] font-sans selection:bg-[#6f5ff2]/30 p-6 md:p-12 relative overflow-hidden">
-				{/* Background Glows */}
 				<div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#6f5ff2]/20 rounded-full blur-[120px] pointer-events-none" />
 				<div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#00cfaa]/10 rounded-full blur-[120px] pointer-events-none" />
-				
-						<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
-							<div>
-								<h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
-									Eventos Activos
-								</h1>
-								<p className="mt-3 text-lg text-white/50">
-									Selecciona un evento para gestionar sus invitados.
-								</p>
-							</div>
-							<a
-								href="/admin/create"
-								className="px-5 py-3 rounded-xl bg-[#6f5ff2] text-white font-bold hover:bg-[#5a4bd1] transition-colors shadow-[0_0_20px_rgba(111,95,242,0.3)] hover:shadow-[0_0_30px_rgba(111,95,242,0.5)] self-start md:self-center"
-							>
-								+ Crear Evento
-							</a>
+				<div className="max-w-6xl mx-auto relative z-10">
+					<header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
+						<div>
+							<h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+								Eventos Activos
+							</h1>
+							<p className="mt-3 text-lg text-white/50">
+								Selecciona un evento para gestionar sus invitados.
+							</p>
 						</div>
+						<a
+							href="/admin/create"
+							className="px-5 py-3 rounded-xl bg-[#6f5ff2] text-white font-bold hover:bg-[#5a4bd1] transition-colors shadow-[0_0_20px_rgba(111,95,242,0.3)] hover:shadow-[0_0_30px_rgba(111,95,242,0.5)] self-start md:self-center"
+						>
+							+ Crear Evento
+						</a>
 					</header>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -75,9 +73,7 @@ export default async function AdminPage(props: {
 
 		return (
 			<div className="min-h-screen bg-[#0c0c14] text-[#e8e8f0] font-sans selection:bg-[#6f5ff2]/30 p-4 md:p-8 relative overflow-hidden">
-				{/* Background Glows */}
 				<div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-[#6f5ff2]/10 rounded-full blur-[120px] pointer-events-none" />
-
 				<div className="max-w-6xl mx-auto relative z-10">
 					<header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
 						<div>
@@ -90,7 +86,9 @@ export default async function AdminPage(props: {
 							<h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
 								Panel de Invitados
 							</h1>
-							<p className="mt-2 text-white/50">Gestiona los accesos al evento.</p>
+							<p className="mt-2 text-white/50">
+								Gestiona los accesos al evento.
+							</p>
 						</div>
 						<div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
 							<a
@@ -102,7 +100,8 @@ export default async function AdminPage(props: {
 								📥 Exportar CSV
 							</a>
 							<div className="px-4 py-2.5 rounded-full bg-white/[0.03] border border-white/[0.05] text-sm text-white/60">
-								Total: <strong className="text-white">{guests?.length || 0}</strong>
+								Total:{" "}
+								<strong className="text-white">{guests?.length || 0}</strong>
 							</div>
 						</div>
 					</header>
@@ -114,7 +113,8 @@ export default async function AdminPage(props: {
 	} catch (error) {
 		return (
 			<div className="min-h-screen bg-[#0c0c14] flex items-center justify-center p-8 text-red-400">
-				Error cargando guests: {error instanceof Error ? error.message : String(error)}
+				Error cargando guests:{" "}
+				{error instanceof Error ? error.message : String(error)}
 			</div>
 		);
 	}

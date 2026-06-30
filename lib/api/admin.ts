@@ -15,7 +15,9 @@ export async function getEventGuests(eventId: string) {
 	const sb = createAdminSupabase();
 	const { data, error } = await sb
 		.from("guests")
-		.select("id, name, last_name, email, role, company, phone, dni, ruc, status, created_at")
+		.select(
+			"id, name, last_name, email, role, company, phone, dni, ruc, status, created_at",
+		)
 		.eq("event_id", eventId)
 		.order("created_at", { ascending: false });
 

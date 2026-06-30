@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import type { FormField } from "@/lib/events";
 
 type Status = "idle" | "sending" | "done" | "error";
 
 const inputCls =
-	"w-full rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm text-[#e8e8f0] outline-none focus:border-[#6f5ff2]";
+	"w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-[#e8e8f0] placeholder:text-white/40 outline-none transition-colors focus:border-[#6f5ff2] focus:bg-white/[0.06] focus:ring-2 focus:ring-[#6f5ff2]/30";
 
 /** Form de registro (#14). Core fijo + campos configurables por evento (P2). Postea a /api/register (P7). */
 export function RegisterForm({
@@ -40,7 +39,9 @@ export function RegisterForm({
 			} else {
 				setStatus("error");
 				if (data.error === "register_failed") {
-					setErrorMsg("Este correo ya está registrado para el evento o hubo un error.");
+					setErrorMsg(
+						"Este correo ya está registrado para el evento o hubo un error.",
+					);
 				} else if (data.error?.fieldErrors) {
 					const firstKey = Object.keys(data.error.fieldErrors)[0];
 					const firstErr = data.error.fieldErrors[firstKey]?.[0];
@@ -49,7 +50,7 @@ export function RegisterForm({
 					setErrorMsg("Algo falló. Revisá los datos e intentá de nuevo.");
 				}
 			}
-		} catch (err) {
+		} catch {
 			setStatus("error");
 			setErrorMsg("Error de conexión. Intenta nuevamente.");
 		}
@@ -57,9 +58,17 @@ export function RegisterForm({
 
 	if (status === "done") {
 		return (
-			<div className="rounded-lg border border-[#6f5ff2]/40 bg-[#6f5ff2]/10 p-4 text-[#e8e8f0]">
-				✅ Tu inscripción está <strong>pendiente de aprobación</strong>. Te
-				llegará un email cuando te aprueben.
+			<div className="flex flex-col items-center gap-3 rounded-2xl border border-[#00cfaa]/30 bg-[#00cfaa]/[0.07] p-6 text-center">
+				<div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#00cfaa]/15 text-2xl">
+					✓
+				</div>
+				<p className="text-[#e8e8f0]">
+					Tu inscripción está{" "}
+					<strong className="text-[#00cfaa]">pendiente de aprobación</strong>.
+				</p>
+				<p className="text-sm text-white/60">
+					Te llega un email con tu acceso cuando te aprueben.
+				</p>
 			</div>
 		);
 	}
@@ -94,9 +103,13 @@ export function RegisterForm({
 					onChange={(e) => set(f.key, e.target.value)}
 				/>
 			))}
-			<Button type="submit" disabled={status === "sending"}>
+			<button
+				type="submit"
+				disabled={status === "sending"}
+				className="mt-1 w-full rounded-xl bg-[#6f5ff2] px-4 py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(111,95,242,0.35)] transition-all hover:bg-[#5a4be0] hover:shadow-[0_0_32px_rgba(111,95,242,0.5)] disabled:opacity-60 disabled:shadow-none"
+			>
 				{status === "sending" ? "Enviando…" : "Solicitar unirse"}
-			</Button>
+			</button>
 			{status === "error" && (
 				<p className="text-sm text-red-400">
 					{errorMsg || "Algo falló. Revisá los datos e intentá de nuevo."}

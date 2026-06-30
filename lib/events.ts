@@ -21,7 +21,6 @@ export interface EventRow {
 	instructions?: string | null;
 	description?: string | null;
 	organizer?: string | null;
-	brand: BrandConfig;
 	form_fields: FormField[];
 }
 
@@ -44,7 +43,7 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 			)
 			.eq("slug", slug)
 			.maybeSingle();
-		
+
 		if (fallback.error && fallback.error.code === "42703") {
 			// Segundo fallback (si tampoco existe location_url)
 			const fallback2 = await sb
@@ -54,10 +53,10 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 				)
 				.eq("slug", slug)
 				.maybeSingle();
-			data = fallback2.data;
+			data = fallback2.data as typeof data;
 			error = fallback2.error;
 		} else {
-			data = fallback.data;
+			data = fallback.data as typeof data;
 			error = fallback.error;
 		}
 	}

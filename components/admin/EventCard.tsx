@@ -1,6 +1,10 @@
 import React from "react";
 
-export function EventCard({ ev }: { ev: { id: string; slug: string; name: string } }) {
+export function EventCard({
+	ev,
+}: {
+	ev: { id: string; slug: string; name: string };
+}) {
 	return (
 		<a
 			href={`/admin?eventId=${ev.id}`}

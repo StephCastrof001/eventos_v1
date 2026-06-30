@@ -1,17 +1,31 @@
 import React from "react";
 import { approveGuest, rejectGuest } from "@/app/admin/actions";
 
-export function GuestTable({ guests, eventId }: { guests: any[]; eventId: string }) {
+export function GuestTable({
+	guests,
+	eventId,
+}: {
+	guests: any[];
+	eventId: string;
+}) {
 	return (
 		<div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl overflow-hidden shadow-2xl">
 			<div className="overflow-x-auto">
 				<table className="w-full text-left border-collapse whitespace-nowrap">
 					<thead>
 						<tr className="border-b border-white/[0.05] bg-white/[0.03]">
-							<th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-white/40">Invitado</th>
-							<th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-white/40">Email</th>
-							<th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-white/40">Estado</th>
-							<th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-white/40 text-right">Acción</th>
+							<th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-white/40">
+								Invitado
+							</th>
+							<th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-white/40">
+								Email
+							</th>
+							<th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-white/40">
+								Estado
+							</th>
+							<th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-white/40 text-right">
+								Acción
+							</th>
 						</tr>
 					</thead>
 					<tbody className="divide-y divide-white/[0.02]">
@@ -32,7 +46,9 @@ export function GuestTable({ guests, eventId }: { guests: any[]; eventId: string
 								</td>
 								<td className="px-6 py-4 text-sm text-white/50 font-mono">
 									{guest.email}
-									{guest.phone && <div className="text-xs mt-0.5">📱 {guest.phone}</div>}
+									{guest.phone && (
+										<div className="text-xs mt-0.5">📱 {guest.phone}</div>
+									)}
 								</td>
 								<td className="px-6 py-4">
 									<span

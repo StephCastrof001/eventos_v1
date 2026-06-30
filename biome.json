@@ -11,6 +11,7 @@
 			"**",
 			"!.claude",
 			"!prototype",
+			"!test_manuales",
 			"!.next",
 			"!public",
 			"!Logo",

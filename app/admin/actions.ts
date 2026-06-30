@@ -136,7 +136,12 @@ export async function createEvent(formData: FormData): Promise<void> {
 	const defaultFormFields = [
 		{ key: "name", label: "Nombres", type: "text", required: true },
 		{ key: "lastName", label: "Apellidos", type: "text", required: true },
-		{ key: "email", label: "Correo Electrónico", type: "email", required: true },
+		{
+			key: "email",
+			label: "Correo Electrónico",
+			type: "email",
+			required: true,
+		},
 		{ key: "phone", label: "Celular", type: "tel", required: false },
 		{ key: "company", label: "Empresa", type: "text", required: false },
 		{ key: "role", label: "Rol / Cargo", type: "text", required: false },
