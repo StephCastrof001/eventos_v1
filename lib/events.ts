@@ -66,6 +66,13 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 
 	if (event && event.slug === "test1") {
 		event.name = "Primer evento: lanzamiento comunidad";
+		// DEUDA TÉCNICA (manual, demo): las columnas end_date/location_type/location_url
+		// no existen en DB todavía (refine = supabase/migrations/0002_event_location_fields.sql).
+		// Inyectadas acá para el evento de demo. Al migrar + cargar desde el form, borrar esto.
+		event.end_date = "2026-07-22T13:00:00-05:00";
+		event.location_type = "Presencial";
+		event.location_url =
+			"https://www.google.com/maps/search/?api=1&query=-12.096595299999999%2C-77.02745329999999&query_place_id=ChIJ5dJvgmjIBZERrVP4iV92cvY";
 	}
 
 	return event;
