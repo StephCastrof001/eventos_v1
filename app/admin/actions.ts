@@ -21,7 +21,8 @@ async function requireAdmin(): Promise<void> {
 		data: { user },
 	} = await auth.auth.getUser();
 	// email_confirmed_at: evita spoofing de email no verificado contra la allowlist.
-	if (!user?.email || !user.email_confirmed_at) throw new Error("No autorizado");
+	if (!user?.email || !user.email_confirmed_at)
+		throw new Error("No autorizado");
 
 	const allowed = getEnv()
 		.ADMIN_EMAILS.split(",")
