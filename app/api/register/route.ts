@@ -25,11 +25,18 @@ export async function POST(req: Request) {
 		// Enviar email de pendiente (sin bloquear la respuesta 201)
 		const sb = createAdminSupabase();
 		sb.from("events")
-			.select("name")
+			.select("name, event_date, location")
 			.eq("id", eventId)
 			.single()
 			.then(({ data }) => {
-				if (data) sendPendingEmail(input.email, input.name, data.name);
+				if (data)
+					sendPendingEmail(
+						input.email,
+						input.name,
+						data.name,
+						data.event_date,
+						data.location,
+					);
 			});
 
 		// NO devolver tokens al cliente — solo el estado.

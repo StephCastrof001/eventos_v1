@@ -51,12 +51,47 @@ export function buildApprovalEmail(input: ApprovalEmailInput): {
 	};
 }
 
-export function buildPendingEmail(name: string, eventName: string): {
+export function buildPendingEmail(
+	name: string,
+	eventName: string,
+	eventDate?: string | null,
+	eventLocation?: string | null,
+): {
 	subject: string;
 	html: string;
 } {
 	const safeName = escapeHtml(name);
 	const safeEventName = escapeHtml(eventName);
+
+	let detailsHtml = "";
+	if (eventDate || eventLocation) {
+		const formattedDate = eventDate
+			? new Date(eventDate).toLocaleDateString("es-PE", {
+					weekday: "long",
+					month: "long",
+					day: "numeric",
+					hour: "2-digit",
+					minute: "2-digit",
+				})
+			: "";
+
+		detailsHtml = `
+		<div style="margin-top: 24px; padding: 16px; background-color: #0c0c14; border-radius: 6px; text-align: left;">
+			${
+				formattedDate
+					? `<p style="margin: 0 0 8px 0; font-size: 14px; color: #e8e8f0;">📅 <strong>${formattedDate}</strong></p>`
+					: ""
+			}
+			${
+				eventLocation
+					? `<p style="margin: 0; font-size: 14px; color: #e8e8f0;">📍 <strong>${escapeHtml(
+							eventLocation,
+						)}</strong></p>`
+					: ""
+			}
+		</div>
+		`;
+	}
 
 	const html = `
 <!DOCTYPE html>
@@ -70,14 +105,15 @@ export function buildPendingEmail(name: string, eventName: string): {
     <h1 style="color: #6f5ff2; margin-top: 0;">¡Solicitud Recibida!</h1>
     <p style="font-size: 16px; line-height: 1.5;">Hola <strong>${safeName}</strong>,</p>
     <p style="font-size: 16px; line-height: 1.5;">Hemos recibido tu solicitud para participar en <strong>${safeEventName}</strong>.</p>
-    <p style="font-size: 16px; line-height: 1.5;">Actualmente tu inscripción se encuentra en estado <strong>Pendiente de Aprobación</strong>. Nos pondremos en contacto contigo pronto por este mismo medio con tu entrada oficial.</p>
+    ${detailsHtml}
+    <p style="font-size: 16px; line-height: 1.5; margin-top: 24px;">Actualmente tu inscripción se encuentra en estado <strong style="color: #00cfaa;">Pendiente de Aprobación</strong>. Nos pondremos en contacto contigo pronto por este mismo medio con tu entrada oficial.</p>
   </div>
 </body>
 </html>
 `.trim();
 
 	return {
-		subject: `Solicitud recibida para ${safeEventName}`,
+		subject: \`Solicitud recibida para \${safeEventName}\`,
 		html,
 	};
 }

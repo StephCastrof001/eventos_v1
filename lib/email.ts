@@ -40,11 +40,18 @@ export async function sendPendingEmail(
 	email: string,
 	name: string,
 	eventName: string,
+	eventDate?: string | null,
+	eventLocation?: string | null,
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
 	try {
 		const env = getEnv();
 		const resend = new Resend(env.RESEND_API_KEY);
-		const { subject, html } = buildPendingEmail(name, eventName);
+		const { subject, html } = buildPendingEmail(
+			name,
+			eventName,
+			eventDate,
+			eventLocation,
+		);
 
 		const { data, error } = await resend.emails.send({
 			from: env.EMAIL_FROM,
