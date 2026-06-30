@@ -19,18 +19,40 @@ export function RegisterForm({
 }) {
 	const [values, setValues] = useState<Record<string, string>>({});
 	const [status, setStatus] = useState<Status>("idle");
+	const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
 	const set = (k: string, v: string) =>
 		setValues((prev) => ({ ...prev, [k]: v }));
 
 	async function onSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		setStatus("sending");
-		const res = await fetch("/api/register", {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ eventId, ...values }),
-		});
-		setStatus(res.ok ? "done" : "error");
+		setErrorMsg(null);
+		try {
+			const res = await fetch("/api/register", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ eventId, ...values }),
+			});
+			const data = await res.json();
+			if (res.ok) {
+				setStatus("done");
+			} else {
+				setStatus("error");
+				if (data.error === "register_failed") {
+					setErrorMsg("Este correo ya está registrado para el evento o hubo un error.");
+				} else if (data.error?.fieldErrors) {
+					const firstKey = Object.keys(data.error.fieldErrors)[0];
+					const firstErr = data.error.fieldErrors[firstKey]?.[0];
+					setErrorMsg(`${firstKey}: ${firstErr}`);
+				} else {
+					setErrorMsg("Algo falló. Revisá los datos e intentá de nuevo.");
+				}
+			}
+		} catch (err) {
+			setStatus("error");
+			setErrorMsg("Error de conexión. Intenta nuevamente.");
+		}
 	}
 
 	if (status === "done") {
@@ -77,7 +99,7 @@ export function RegisterForm({
 			</Button>
 			{status === "error" && (
 				<p className="text-sm text-red-400">
-					Algo falló. Revisá los datos e intentá de nuevo.
+					{errorMsg || "Algo falló. Revisá los datos e intentá de nuevo."}
 				</p>
 			)}
 		</form>
