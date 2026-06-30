@@ -22,45 +22,28 @@ export async function POST(req: Request) {
 	try {
 		const guest = await InhouseProvider.register(eventId, input);
 
-		// Enviar email de pendiente (sin bloquear la respuesta 201)
-		const sb = createAdminSupabase();
-		sb.from("events")
-			.select(
-				"name, event_date, end_date, location_type, location, location_url, instructions",
-			)
-			.eq("id", eventId)
-			.single()
-			.then(({ data, error }) => {
-				if (error) {
-					// Fallback si las nuevas columnas no existen en DB
-					sb.from("events")
-						.select("name, event_date, location")
-						.eq("id", eventId)
-						.single()
-						.then(({ data: fallbackData }) => {
-							if (fallbackData)
-								sendPendingEmail(
-									input.email,
-									input.name,
-									fallbackData.name,
-									fallbackData.event_date,
-									fallbackData.location,
-								);
-						});
-				} else if (data) {
-					sendPendingEmail(
-						input.email,
-						input.name,
-						data.name,
-						data.event_date,
-						data.location,
-						data.location_url,
-						data.end_date,
-						data.location_type,
-						data.instructions,
-					);
-				}
-			});
+		// Email de pendiente: AWAIT (fire-and-forget se pierde en serverless al responder).
+		// Select solo columnas que existen en DB (end_date/location_url aún no migradas).
+		// El fallo del email NO debe romper el registro.
+		try {
+			const sb = createAdminSupabase();
+			const { data: ev } = await sb
+				.from("events")
+				.select("name, event_date, location")
+				.eq("id", eventId)
+				.single();
+			if (ev) {
+				await sendPendingEmail(
+					input.email,
+					input.name,
+					ev.name,
+					ev.event_date,
+					ev.location,
+				);
+			}
+		} catch (e) {
+			console.error("[register] pending email fallo:", e);
+		}
 
 		// NO devolver tokens al cliente — solo el estado.
 		return NextResponse.json(
