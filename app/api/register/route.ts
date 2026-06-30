@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { InhouseProvider } from "@/lib/providers/inhouse";
 import { registerSchema } from "@/lib/validation";
+import { sendPendingEmail } from "@/lib/email";
+import { createAdminSupabase } from "@/lib/supabase/server";
 
 // API interna (P7): la UI (cliente) postea acá, nunca toca Supabase directo.
 const bodySchema = registerSchema.extend({ eventId: z.string().uuid() });
@@ -19,6 +21,17 @@ export async function POST(req: Request) {
 	const { eventId, ...input } = parsed.data;
 	try {
 		const guest = await InhouseProvider.register(eventId, input);
+		
+		// Enviar email de pendiente (sin bloquear la respuesta 201)
+		const sb = createAdminSupabase();
+		sb.from("events")
+			.select("name")
+			.eq("id", eventId)
+			.single()
+			.then(({ data }) => {
+				if (data) sendPendingEmail(input.email, input.name, data.name);
+			});
+
 		// NO devolver tokens al cliente — solo el estado.
 		return NextResponse.json(
 			{ ok: true, status: guest.status },

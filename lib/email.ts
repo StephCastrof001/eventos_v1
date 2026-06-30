@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { getEnv } from "@/lib/env";
-import { buildApprovalEmail } from "./email-template";
+import { buildApprovalEmail, buildPendingEmail } from "./email-template";
 
 /**
  * Envía el email de aprobación con el magic link.
@@ -30,6 +30,33 @@ export async function sendApprovalEmail(
 			return { ok: false, error: error.message };
 		}
 
+		return { ok: true, id: data?.id };
+	} catch (e) {
+		return { ok: false, error: e instanceof Error ? e.message : String(e) };
+	}
+}
+
+export async function sendPendingEmail(
+	email: string,
+	name: string,
+	eventName: string,
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+	try {
+		const env = getEnv();
+		const resend = new Resend(env.RESEND_API_KEY);
+		const { subject, html } = buildPendingEmail(name, eventName);
+
+		const { data, error } = await resend.emails.send({
+			from: env.EMAIL_FROM,
+			to: [email],
+			replyTo: "steph@klipso.lat",
+			subject,
+			html,
+		});
+
+		if (error) {
+			return { ok: false, error: error.message };
+		}
 		return { ok: true, id: data?.id };
 	} catch (e) {
 		return { ok: false, error: e instanceof Error ? e.message : String(e) };

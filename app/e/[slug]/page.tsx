@@ -30,7 +30,20 @@ export default async function EventPage({
 				)}
 				{date && <p className="text-sm text-white/60">{date}</p>}
 				{event.location && (
-					<p className="text-sm text-white/60">{event.location}</p>
+					<div className="text-sm text-white/60">
+						{event.location_url ? (
+							<a
+								href={event.location_url}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="hover:text-[#6f5ff2] hover:underline flex items-center gap-1"
+							>
+								📍 {event.location}
+							</a>
+						) : (
+							event.location
+						)}
+					</div>
 				)}
 				{event.description && (
 					<p className="mt-2 text-sm text-white/80">{event.description}</p>

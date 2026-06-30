@@ -50,3 +50,34 @@ export function buildApprovalEmail(input: ApprovalEmailInput): {
 		html,
 	};
 }
+
+export function buildPendingEmail(name: string, eventName: string): {
+	subject: string;
+	html: string;
+} {
+	const safeName = escapeHtml(name);
+	const safeEventName = escapeHtml(eventName);
+
+	const html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>HACK IA</title>
+</head>
+<body style="background-color: #0c0c14; color: #e8e8f0; font-family: sans-serif; padding: 24px; text-align: center;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #1a1a24; padding: 32px; border-radius: 8px;">
+    <h1 style="color: #6f5ff2; margin-top: 0;">¡Solicitud Recibida!</h1>
+    <p style="font-size: 16px; line-height: 1.5;">Hola <strong>${safeName}</strong>,</p>
+    <p style="font-size: 16px; line-height: 1.5;">Hemos recibido tu solicitud para participar en <strong>${safeEventName}</strong>.</p>
+    <p style="font-size: 16px; line-height: 1.5;">Actualmente tu inscripción se encuentra en estado <strong>Pendiente de Aprobación</strong>. Nos pondremos en contacto contigo pronto por este mismo medio con tu entrada oficial.</p>
+  </div>
+</body>
+</html>
+`.trim();
+
+	return {
+		subject: `Solicitud recibida para ${safeEventName}`,
+		html,
+	};
+}

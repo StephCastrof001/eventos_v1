@@ -15,6 +15,7 @@ export interface EventRow {
 	name: string;
 	event_date: string | null;
 	location: string | null;
+	location_url: string | null;
 	description: string | null;
 	organizer: string | null;
 	form_fields: FormField[];
@@ -26,7 +27,7 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 	const { data, error } = await sb
 		.from("events")
 		.select(
-			"id, slug, name, event_date, location, description, organizer, form_fields",
+			"id, slug, name, event_date, location, location_url, description, organizer, form_fields",
 		)
 		.eq("slug", slug)
 		.maybeSingle();
