@@ -97,7 +97,9 @@ export function BadgeTemplate({
 						width={240}
 						height={240}
 						alt=""
-						style={{ objectFit: "cover" }}
+						// borderRadius en el <img>: satori no recorta el raster solo con
+						// overflow:hidden del padre. El clip circular va acá.
+						style={{ objectFit: "cover", borderRadius: 9999 }}
 					/>
 				) : null}
 			</div>
