@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -7,9 +8,9 @@ type Status = "idle" | "sending" | "done" | "error";
 
 /** Subida de foto self-service (#5). Postea formData a /api/photo con el magic_token. */
 export function PhotoUpload({ magicToken }: { magicToken: string }) {
+	const router = useRouter();
 	const [status, setStatus] = useState<Status>("idle");
 	const [error, setError] = useState<string | null>(null);
-	const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
 	async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -20,8 +21,10 @@ export function PhotoUpload({ magicToken }: { magicToken: string }) {
 		const res = await fetch("/api/photo", { method: "POST", body: form });
 		const json = await res.json().catch(() => null);
 		if (res.ok && json?.ok) {
-			setPhotoUrl(json.photo_url);
+			// El invitado ya pasó a badge_ready: refrescamos para que el server
+			// re-renderice la página con el badge (QR + descarga), sin reabrir el email.
 			setStatus("done");
+			router.refresh();
 		} else {
 			setError(json?.error ?? "error");
 			setStatus("error");
@@ -31,15 +34,7 @@ export function PhotoUpload({ magicToken }: { magicToken: string }) {
 	if (status === "done") {
 		return (
 			<div className="flex flex-col items-center gap-3 rounded-lg border border-[#00cfaa]/40 bg-[#00cfaa]/10 p-4 text-[#e8e8f0]">
-				<p>✅ Foto subida. Tu badge está listo.</p>
-				{photoUrl && (
-					// biome-ignore lint/performance/noImgElement: preview simple, no Next/Image
-					<img
-						src={photoUrl}
-						alt="Tu foto"
-						className="h-32 w-32 rounded-full object-cover"
-					/>
-				)}
+				<p>✅ Foto subida. Generando tu badge…</p>
 			</div>
 		);
 	}
