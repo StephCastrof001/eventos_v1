@@ -1,9 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase } from "@/lib/supabase/server";
 import { POST } from "./route";
 
+// route.ts usa createAdminSupabase (service_role, sync) — no createServerSupabase.
 vi.mock("@/lib/supabase/server", () => ({
-	createServerSupabase: vi.fn(),
+	createAdminSupabase: vi.fn(),
 }));
 
 function mockSupabase(
@@ -30,8 +31,9 @@ function mockSupabase(
 			})),
 		})),
 	};
+	// createAdminSupabase es sync (no async) -> mockReturnValue.
 	// biome-ignore lint/suspicious/noExplicitAny: mock
-	(createServerSupabase as any).mockResolvedValue(mockSb);
+	(createAdminSupabase as any).mockReturnValue(mockSb);
 }
 
 describe("POST /api/checkin", () => {
@@ -101,7 +103,7 @@ describe("POST /api/checkin", () => {
 			})),
 		};
 		// biome-ignore lint/suspicious/noExplicitAny: mock
-		(createServerSupabase as any).mockResolvedValue(mockSb);
+		(createAdminSupabase as any).mockReturnValue(mockSb);
 
 		const req = new Request("http://localhost/api/checkin", {
 			method: "POST",

@@ -8,6 +8,7 @@ const valid = {
 	RESEND_API_KEY: "re_x",
 	EMAIL_FROM: "HACK IA <no-reply@send.klipso.xxx>",
 	NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+	ADMIN_EMAILS: "admin@example.com",
 };
 
 describe("parseEnv", () => {
