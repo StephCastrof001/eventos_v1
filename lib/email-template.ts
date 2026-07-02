@@ -68,7 +68,8 @@ export function buildApprovalEmail(input: ApprovalEmailInput): {
     <p style="margin:24px 0 0 0; font-size:12px; line-height:1.5; color:#6b6b80;">Si el botón no funciona, copiá este enlace:<br><span style="color:#9a9ab0;">${safeUrl}</span></p>`;
 
 	return {
-		subject: "✅ Aprobado — tu entrada para HACK IA",
+		subject:
+			"✅ Aprobado — tu entrada para la inauguración de la comunidad HACK IA",
 		html: emailShell("Tu solicitud fue aprobada. Generá tu credencial.", body),
 	};
 }
