@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { sendBadgeReadyEmail } from "@/lib/email";
+import { getEnv } from "@/lib/env";
 import { getGuestByMagicToken } from "@/lib/magic";
 import { validatePhoto } from "@/lib/photo";
 import { setGuestPhoto, uploadGuestPhoto } from "@/lib/storage";
+import { createAdminSupabase } from "@/lib/supabase/server";
+import { buildMagicUrl } from "@/lib/urls";
 
 const CONSENT_VERSION = "v1-ley29733"; // ADR-001
 
@@ -54,6 +58,23 @@ export async function POST(req: Request) {
 		type: file.type,
 	});
 	await setGuestPhoto(guest.id, guest.status, photoUrl, CONSENT_VERSION);
+
+	// Email "badge listo" con link a la credencial. AWAIT (fire-and-forget se pierde
+	// en serverless). El fallo NO debe romper la subida de foto.
+	try {
+		const env = getEnv();
+		const badgeUrl = buildMagicUrl(env.NEXT_PUBLIC_APP_URL, token);
+		const { data: g } = await createAdminSupabase()
+			.from("guests")
+			.select("email")
+			.eq("id", guest.id)
+			.single();
+		if (g?.email) {
+			await sendBadgeReadyEmail(g.email, guest.name, badgeUrl);
+		}
+	} catch (e) {
+		console.error("[photo] badge-ready email fallo:", e);
+	}
 
 	return NextResponse.json({
 		ok: true,
