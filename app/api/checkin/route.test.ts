@@ -1,10 +1,16 @@
 import { describe, expect, test, vi } from "vitest";
+import { requireAdmin } from "@/lib/admin-auth";
 import { createAdminSupabase } from "@/lib/supabase/server";
 import { POST } from "./route";
 
 // route.ts usa createAdminSupabase (service_role, sync) — no createServerSupabase.
 vi.mock("@/lib/supabase/server", () => ({
 	createAdminSupabase: vi.fn(),
+}));
+
+// Gate staff-only. Por default autoriza; un test lo rechaza para probar el 401.
+vi.mock("@/lib/admin-auth", () => ({
+	requireAdmin: vi.fn(),
 }));
 
 function mockSupabase(
@@ -38,6 +44,19 @@ function mockSupabase(
 
 describe("POST /api/checkin", () => {
 	const eventId = "d390a786-8f2e-4b68-b4b3-5793e53c483a";
+
+	test("should_return_401_when_not_admin", async () => {
+		(requireAdmin as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+			new Error("No autorizado"),
+		);
+		const req = new Request("http://localhost/api/checkin", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ qrToken: "abc", eventId }),
+		});
+		const res = await POST(req);
+		expect(res.status).toBe(401);
+	});
 
 	test("should_return_400_when_eventId_missing", async () => {
 		const req = new Request("http://localhost/api/checkin", {

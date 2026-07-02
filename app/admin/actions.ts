@@ -1,37 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/admin-auth";
 import { sendApprovalEmail } from "@/lib/email";
 import { getEnv } from "@/lib/env";
 import { type GuestStatus, transition } from "@/lib/guest-status";
-import {
-	createAdminSupabase,
-	createServerSupabase,
-} from "@/lib/supabase/server";
+import { createAdminSupabase } from "@/lib/supabase/server";
 import { buildMagicUrl } from "@/lib/urls";
-
-/**
- * Exige admin AUTORIZADO (no solo autenticado): sesión válida + email en la allowlist.
- * Supabase permite signups públicos por default, así que "logueado" ≠ "admin".
- * Las mutaciones usan service_role (bypassa RLS) → el gate de autorización vive acá.
- */
-async function requireAdmin(): Promise<void> {
-	const auth = await createServerSupabase();
-	const {
-		data: { user },
-	} = await auth.auth.getUser();
-	// email_confirmed_at: evita spoofing de email no verificado contra la allowlist.
-	if (!user?.email || !user.email_confirmed_at)
-		throw new Error("No autorizado");
-
-	const allowed = getEnv()
-		.ADMIN_EMAILS.split(",")
-		.map((e) => e.trim().toLowerCase())
-		.filter(Boolean);
-	if (!allowed.includes(user.email.toLowerCase())) {
-		throw new Error("No autorizado");
-	}
-}
 
 export async function approveGuest(
 	guestId: string,

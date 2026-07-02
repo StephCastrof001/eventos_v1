@@ -15,6 +15,7 @@ export default function ScanPage(props: {
 	const [lastResult, setLastResult] = useState<{
 		ok: boolean;
 		message: string;
+		photoUrl?: string | null;
 	} | null>(null);
 
 	useEffect(() => {
@@ -54,19 +55,28 @@ export default function ScanPage(props: {
 
 								if (res.status === 200) {
 									const data = await res.json();
+									const full = [data.guest.name, data.guest.last_name]
+										.filter(Boolean)
+										.join(" ");
 									setLastResult({
 										ok: true,
-										message: `Check-in exitoso: ${data.guest.name}`,
+										message: `✅ Entró: ${full}`,
+										photoUrl: data.guest.photo_url,
 									});
 								} else if (res.status === 409) {
 									setLastResult({
 										ok: false,
-										message: "Error: Ya está checked in",
+										message: "⚠️ Ya hizo check-in",
+									});
+								} else if (res.status === 401) {
+									setLastResult({
+										ok: false,
+										message: "Sesión expirada — volvé a entrar al admin",
 									});
 								} else {
 									setLastResult({
 										ok: false,
-										message: "Error: Token inválido",
+										message: "❌ QR inválido o de otro evento",
 									});
 								}
 							} catch {
@@ -128,10 +138,18 @@ export default function ScanPage(props: {
 
 			{lastResult && (
 				<div
-					className={`mt-4 p-4 rounded-lg text-center w-full font-bold shadow-lg transition-all ${
+					className={`mt-4 p-4 rounded-lg text-center w-full font-bold shadow-lg transition-all flex flex-col items-center gap-3 ${
 						lastResult.ok ? "bg-green-600 text-white" : "bg-red-600 text-white"
 					}`}
 				>
+					{lastResult.ok && lastResult.photoUrl && (
+						// biome-ignore lint/performance/noImgElement: preview foto invitado
+						<img
+							src={lastResult.photoUrl}
+							alt="Invitado"
+							className="h-20 w-20 rounded-full object-cover border-2 border-white/60"
+						/>
+					)}
 					{lastResult.message}
 				</div>
 			)}
