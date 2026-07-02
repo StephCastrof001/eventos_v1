@@ -3,6 +3,8 @@ import { getEnv } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createEvent } from "../actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function CreateEventPage() {
 	// Auth
 	const auth = await createServerSupabase();
