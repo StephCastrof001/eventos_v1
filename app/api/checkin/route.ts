@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { requireAdmin } from "@/lib/admin-auth";
 import { decideCheckin } from "@/lib/checkin";
 import type { GuestStatus } from "@/lib/guest-status";
 import { createAdminSupabase } from "@/lib/supabase/server";
@@ -11,6 +12,16 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
+	// Check-in solo staff: exige sesión admin autorizada (allowlist).
+	try {
+		await requireAdmin();
+	} catch {
+		return NextResponse.json(
+			{ ok: false, error: "unauthorized" },
+			{ status: 401 },
+		);
+	}
+
 	try {
 		const json = await req.json().catch(() => null);
 		const parsed = bodySchema.safeParse(json);
@@ -28,7 +39,7 @@ export async function POST(req: Request) {
 		// C1: Filtrar siempre por event_id
 		const { data: guest, error: fetchError } = await sb
 			.from("guests")
-			.select("id, name, status")
+			.select("id, name, last_name, photo_url, status")
 			.eq("qr_token", qrToken)
 			.eq("event_id", eventId)
 			.single();
@@ -69,7 +80,15 @@ export async function POST(req: Request) {
 		}
 
 		return NextResponse.json(
-			{ ok: true, guest: { name: guest.name, status: decision.next } },
+			{
+				ok: true,
+				guest: {
+					name: guest.name,
+					last_name: guest.last_name,
+					photo_url: guest.photo_url,
+					status: decision.next,
+				},
+			},
 			{ status: 200 },
 		);
 	} catch {

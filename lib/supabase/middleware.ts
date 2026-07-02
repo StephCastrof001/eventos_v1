@@ -61,16 +61,15 @@ export async function updateSession(request: NextRequest) {
 		data: { user },
 	} = await supabase.auth.getUser();
 
-	// Proteger admin routes
-	if (
-		request.nextUrl.pathname.startsWith("/admin") &&
-		!request.nextUrl.pathname.startsWith("/admin/login")
-	) {
-		if (!user) {
-			const url = request.nextUrl.clone();
-			url.pathname = "/admin/login";
-			return NextResponse.redirect(url);
-		}
+	// Proteger rutas admin + el escáner de check-in (/scan es staff-only).
+	const path = request.nextUrl.pathname;
+	const isProtected =
+		(path.startsWith("/admin") && !path.startsWith("/admin/login")) ||
+		path.startsWith("/scan");
+	if (isProtected && !user) {
+		const url = request.nextUrl.clone();
+		url.pathname = "/admin/login";
+		return NextResponse.redirect(url);
 	}
 
 	return response;
