@@ -26,3 +26,13 @@ Thumbs.db
 
 # TS incremental cache (nunca commitear)
 *.tsbuildinfo
+
+# scripts temporales de un solo uso (provision/seed/wipe) — nunca al repo
+_*.mjs
+
+# capturas / imagenes sueltas de trabajo (no son assets del app)
+Captura de pantalla*.png
+badge-hackia.png
+
+# claves privadas
+*.pem
