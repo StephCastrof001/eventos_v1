@@ -74,7 +74,9 @@ export async function GET(
 		}),
 		{
 			width: 720,
-			height: 1080,
+			// Vista descarga (sin QR): canvas más bajo para no dejar hueco vacío donde
+			// iba el QR → queda compacta para compartir en redes.
+			height: download ? 760 : 1080,
 			fonts: [
 				{ name: "Space Grotesk", data: fontData, weight: 700, style: "normal" },
 			],
