@@ -74,6 +74,42 @@ export function buildApprovalEmail(input: ApprovalEmailInput): {
 	};
 }
 
+export interface BadgeReadyEmailInput {
+	name: string;
+	badgeUrl: string;
+}
+
+/**
+ * Email "tu badge está listo" — se envía al pasar a badge_ready (subió foto).
+ * Lleva a la página del badge (QR en pantalla + descarga sin QR). Mismo shell branded.
+ */
+export function buildBadgeReadyEmail(input: BadgeReadyEmailInput): {
+	subject: string;
+	html: string;
+} {
+	const safeName = escapeHtml(input.name);
+
+	const parsed = new URL(input.badgeUrl);
+	if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+		throw new Error("badgeUrl: esquema no permitido");
+	}
+	const safeUrl = escapeHtml(parsed.toString());
+
+	const body = `
+    <h1 style="margin:0 0 16px 0; font-size:24px; color:#e8e8f0;">Tu badge está listo 🎫</h1>
+    <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Hola <strong style="color:#e8e8f0;">${safeName}</strong>,</p>
+    <p style="margin:0 0 24px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Tu credencial con QR ya está lista. Abrila desde el botón: mostrás el QR en la puerta para tu check-in y podés descargar tu versión (sin QR) para compartir en redes.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#6f5ff2;">
+      <a href="${safeUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver mi credencial →</a>
+    </td></tr></table>
+    <p style="margin:24px 0 0 0; font-size:12px; line-height:1.5; color:#6b6b80;">Si el botón no funciona, copiá este enlace:<br><span style="color:#9a9ab0;">${safeUrl}</span></p>`;
+
+	return {
+		subject: "🎫 Tu badge está listo — HACK IA",
+		html: emailShell("Tu credencial con QR ya está lista.", body),
+	};
+}
+
 export function buildPendingEmail(
 	name: string,
 	eventName: string,
