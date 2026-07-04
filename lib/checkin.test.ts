@@ -21,10 +21,16 @@ describe("decideCheckin", () => {
 		});
 	});
 
+	it("returns ok for approved (foto opcional, QR vale desde aprobación)", () => {
+		expect(decideCheckin("approved")).toEqual({
+			ok: true,
+			next: "checked_in",
+		});
+	});
+
 	it("returns not_approved for other states", () => {
 		const otherStates: GuestStatus[] = [
 			"registered",
-			"approved",
 			"rejected",
 			"canceled",
 		];

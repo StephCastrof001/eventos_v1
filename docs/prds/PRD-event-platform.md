@@ -27,13 +27,14 @@ App web (Next.js) **inhouse**, gratis, donde:
 2. Se **registra** con un formulario propio de **campos configurables por evento**
    (core: nombre, apellido, email; extras: teléfono, empresa, cargo, DNI, RUC).
 3. Queda **pendiente de aprobación**. Un **admin** (único rol con login) **aprueba/rechaza** a mano.
-4. Al aprobar → **email automático (Resend)** con la **URL del badge**.
-5. El invitado abre la URL (magic link, sin cuenta), **sube su foto (obligatoria)** y consiente
-   el uso de datos (Ley 29733, ADR-001).
-6. El sistema genera dos salidas:
-   - **Badge de entrada**: foto + nombre/apellido + cargo + **QR propio** + brand HACK IA. Privado.
-   - **Imagen social**: foto + brand + mensaje *"Asistiré al lanzamiento de la comunidad HACK IA"*,
-     **sin QR**, descargable/compartible.
+4. Al aprobar → **email automático (Resend)** con la **URL de la entrada** ("Ver mi entrada").
+   El consentimiento (Ley 29733, ADR-001) se acepta **en el registro**, no en la foto.
+5. El invitado abre la URL (magic link, sin cuenta): ve su **QR de entrada** de una vez
+   (la foto **no** es requisito). El mismo link permite subir foto (opcional) y bajar el badge.
+6. Salidas:
+   - **Entrada (QR)**: disponible desde `approved`. El QR es lo que se escanea en la puerta.
+   - **Badge social (opcional)**: si sube foto → foto + brand + mensaje *"Asistiré al lanzamiento
+     de la comunidad HACK IA"*, **sin QR**, descargable/compartible.
 7. El día del evento, un **admin escanea el QR con la cámara del celular** (`/scan`):
    marca asistencia, muestra ficha (foto+nombre+cargo), rechaza duplicado/inválido/no-aprobado.
 
@@ -47,10 +48,10 @@ Desacople: la UI nunca toca Supabase directo; pasa por una **API interna** por `
 1. Como asistente, veo la página del evento (organizador, fecha, lugar) para decidir si voy.
 2. Como asistente, me registro con un formulario con los campos que el evento pide, para solicitar lugar.
 3. Como asistente, al registrarme veo un mensaje de "pendiente de aprobación", para saber el estado.
-4. Como asistente aprobado, recibo un email con la URL de mi badge, para continuar.
+4. Como asistente aprobado, recibo un email con la URL de mi entrada, para continuar.
 5. Como asistente, abro la URL sin crear cuenta (magic link), para no fricción.
-6. Como asistente, subo mi foto (obligatoria) y acepto el uso de mis datos, para generar mi badge.
-7. Como asistente, veo mi badge de entrada con mi QR, para usarlo en la puerta.
+6. Como asistente, veo mi **QR de entrada de una vez** (sin subir foto), para no depender de la foto.
+7. Como asistente, opcionalmente subo mi foto para generar un badge que compartir en redes.
 8. Como asistente, descargo una imagen social con mi foto y el mensaje del evento, para postearla.
 9. Como asistente, NO puedo compartir/descargar mi QR de entrada, para no filtrar mi acceso.
 10. Como asistente, en la puerta muestro mi QR y entro rápido.
@@ -95,7 +96,9 @@ guests ( id, event_id fk, name, last_name, email, role, company, phone, dni, ruc
          consent_at, consent_version,   -- ADR-001
          created_at, approved_at, checked_in_at )
 ```
-State machine: `registered →(admin aprueba) approved →(sube foto) badge_ready →(scan) checked_in`; `rejected`/`canceled` de salida.
+State machine: `registered →(admin aprueba) approved →(scan) checked_in`. La foto es opcional:
+`approved →(sube foto) badge_ready →(scan) checked_in`. El check-in acepta `approved` **o**
+`badge_ready` (la foto no es requisito de ingreso). `rejected`/`canceled` de salida.
 
 **Badge (satori, dos salidas, P8/P9):** `BadgeService({name,last_name,role,photo,qr,brand}) → PNG`.
 - Entrada: foto+datos+**QR propio** (de `qr_token`, → `/r/{qr_token}`). bg canvas `#0c0c14` exacto, Space Grotesk Bold.

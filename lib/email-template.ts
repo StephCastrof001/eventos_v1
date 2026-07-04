@@ -61,16 +61,16 @@ export function buildApprovalEmail(input: ApprovalEmailInput): {
 	const body = `
     <h1 style="margin:0 0 16px 0; font-size:24px; color:#e8e8f0;">¡Estás dentro! 🎉</h1>
     <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Hola <strong style="color:#e8e8f0;">${safeName}</strong>,</p>
-    <p style="margin:0 0 24px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Tu solicitud fue aprobada. Generá tu credencial de acceso con el botón:</p>
+    <p style="margin:0 0 24px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Tu solicitud fue aprobada. Aquí tienes tu entrada con QR: muéstrala en la puerta para tu ingreso. Ábrela con el botón:</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#6f5ff2;">
-      <a href="${safeUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver mi credencial →</a>
+      <a href="${safeUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver mi entrada →</a>
     </td></tr></table>
-    <p style="margin:24px 0 0 0; font-size:12px; line-height:1.5; color:#6b6b80;">Si el botón no funciona, copiá este enlace:<br><span style="color:#9a9ab0;">${safeUrl}</span></p>`;
+    <p style="margin:24px 0 0 0; font-size:12px; line-height:1.5; color:#6b6b80;">Si el botón no funciona, copia este enlace:<br><span style="color:#9a9ab0;">${safeUrl}</span></p>`;
 
 	return {
 		subject:
 			"✅ Aprobado — tu entrada para la inauguración de la comunidad HACK IA",
-		html: emailShell("Tu solicitud fue aprobada. Generá tu credencial.", body),
+		html: emailShell("Tu solicitud fue aprobada. Aquí está tu entrada.", body),
 	};
 }
 
@@ -98,11 +98,11 @@ export function buildBadgeReadyEmail(input: BadgeReadyEmailInput): {
 	const body = `
     <h1 style="margin:0 0 16px 0; font-size:24px; color:#e8e8f0;">Tu badge está listo 🎫</h1>
     <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Hola <strong style="color:#e8e8f0;">${safeName}</strong>,</p>
-    <p style="margin:0 0 24px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Tu credencial con QR ya está lista. Abrila desde el botón: mostrás el QR en la puerta para tu check-in y podés descargar tu versión (sin QR) para compartir en redes.</p>
+    <p style="margin:0 0 24px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Tu badge con QR ya está listo. Ábrelo desde el botón: muestras el QR en la puerta para tu check-in y puedes descargar tu versión (sin QR) para compartir en redes.</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#6f5ff2;">
       <a href="${safeUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver mi credencial →</a>
     </td></tr></table>
-    <p style="margin:24px 0 0 0; font-size:12px; line-height:1.5; color:#6b6b80;">Si el botón no funciona, copiá este enlace:<br><span style="color:#9a9ab0;">${safeUrl}</span></p>`;
+    <p style="margin:24px 0 0 0; font-size:12px; line-height:1.5; color:#6b6b80;">Si el botón no funciona, copia este enlace:<br><span style="color:#9a9ab0;">${safeUrl}</span></p>`;
 
 	return {
 		subject: "🎫 Tu badge está listo — HACK IA",

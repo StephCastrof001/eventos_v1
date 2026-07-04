@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { MeshBg } from "@/components/mesh-bg";
 import { PhotoUpload } from "@/components/photo-upload";
 import logo from "@/Logo/hackia_primary_dark.svg";
+import { makeCheckinQr } from "@/lib/checkin-qr";
+import { getEnv } from "@/lib/env";
 import { getGuestByMagicToken } from "@/lib/magic";
 
 // Página self-service del invitado (#4). Autenticada por magic_token (sin cuenta).
@@ -17,6 +19,13 @@ export default async function BadgePage({
 
 	const fullName = [guest.name, guest.last_name].filter(Boolean).join(" ");
 
+	// La entrada (QR) está disponible desde que se aprueba; la foto es opcional
+	// (solo mejora el badge para compartir). El QR es lo que se escanea en la puerta.
+	const entradaQr =
+		guest.status === "approved"
+			? await makeCheckinQr(getEnv().NEXT_PUBLIC_APP_URL, guest.qr_token)
+			: null;
+
 	return (
 		<>
 			<MeshBg />
@@ -29,14 +38,37 @@ export default async function BadgePage({
 				</header>
 
 				{guest.status === "approved" && (
-					<section className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-sm">
-						<p className="text-sm leading-relaxed text-white/80">
-							Estás{" "}
-							<span className="font-semibold text-[#00cfaa]">aprobado</span> 🎉
-							Subí tu foto para generar tu badge.
-						</p>
-						<PhotoUpload magicToken={token} />
-					</section>
+					<>
+						{/* Entrada: QR disponible desde la aprobación (la foto no es requisito) */}
+						<section className="flex flex-col items-center gap-3 rounded-2xl border border-[#00cfaa]/25 bg-[#00cfaa]/[0.06] p-5 text-center">
+							<p className="font-semibold text-[#00cfaa]">
+								¡Aprobado! Aquí está tu entrada 🎫
+							</p>
+							{entradaQr && (
+								<div className="rounded-2xl bg-white p-3">
+									{/* biome-ignore lint/performance/noImgElement: QR data URL dinámico */}
+									<img
+										src={entradaQr}
+										alt="Tu QR de entrada"
+										className="h-48 w-48"
+									/>
+								</div>
+							)}
+							<p className="text-xs leading-relaxed text-white/70">
+								Muéstralo en la puerta para tu ingreso. Tenlo listo en tu
+								celular.
+							</p>
+						</section>
+
+						{/* Badge para redes: opcional, requiere foto */}
+						<section className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-sm">
+							<p className="text-sm leading-relaxed text-white/80">
+								¿Quieres tu badge para compartir en redes? Sube tu foto{" "}
+								<span className="text-white/50">(opcional)</span>.
+							</p>
+							<PhotoUpload magicToken={token} />
+						</section>
+					</>
 				)}
 
 				{guest.status === "badge_ready" && (

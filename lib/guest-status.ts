@@ -1,10 +1,12 @@
 /**
  * Estados del invitado y máquina de transiciones (CONTEXT.md v0.3).
  *
- *   registered ─(admin aprueba)─> approved ─(sube foto)─> badge_ready ─(scan)─> checked_in
+ *   registered ─(admin aprueba)─> approved ─(scan)─> checked_in
+ *        │                            └─(sube foto)─> badge_ready ─(scan)─> checked_in
  *        └─(admin rechaza)─> rejected        (canceled: el invitado se baja)
  *
- * Sin cupo/waitlist (P7). Sin certificado (v2). Foto gatea approved→badge_ready (app).
+ * Sin cupo/waitlist (P7). Sin certificado (v2). La foto es OPCIONAL: el check-in
+ * acepta approved o badge_ready. El QR/entrada vale desde la aprobación.
  */
 export type GuestStatus =
 	| "registered"
@@ -17,7 +19,7 @@ export type GuestStatus =
 /** Transiciones válidas: from → conjunto de destinos permitidos. */
 const TRANSITIONS: Record<GuestStatus, readonly GuestStatus[]> = {
 	registered: ["approved", "rejected", "canceled"],
-	approved: ["badge_ready", "rejected", "canceled"],
+	approved: ["badge_ready", "checked_in", "rejected", "canceled"],
 	badge_ready: ["checked_in", "canceled"],
 	checked_in: [],
 	rejected: [],
