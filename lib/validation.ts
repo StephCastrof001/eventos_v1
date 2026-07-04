@@ -20,6 +20,10 @@ export const registerSchema = z.object({
 		.string()
 		.regex(/^\d{11}$/, "RUC debe tener 11 dígitos")
 		.optional(),
+	// Consentimiento Ley 29733: obligatorio al registrar (datos + imagen).
+	consent: z.literal(true, {
+		message: "Debés aceptar el tratamiento de datos",
+	}),
 });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;

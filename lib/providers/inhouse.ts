@@ -25,6 +25,9 @@ export const InhouseProvider: RegistroProvider = {
 				status: "registered",
 				magic_token: newToken(),
 				qr_token: newToken(),
+				// Consentimiento Ley 29733 dado en el registro (casilla obligatoria).
+				consent_at: new Date().toISOString(),
+				consent_version: "v1-ley29733",
 			})
 			.select()
 			.single();

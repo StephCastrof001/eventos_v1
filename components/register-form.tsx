@@ -17,11 +17,16 @@ export function RegisterForm({
 	fields: FormField[];
 }) {
 	const [values, setValues] = useState<Record<string, string>>({});
+	const [consent, setConsent] = useState(false);
 	const [status, setStatus] = useState<Status>("idle");
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
 	const set = (k: string, v: string) =>
 		setValues((prev) => ({ ...prev, [k]: v }));
+
+	// DNI va tercero (tras Apellidos, antes de Email); el resto de campos después.
+	const dniField = fields.find((f) => f.key === "dni");
+	const restFields = fields.filter((f) => f.key !== "dni");
 
 	async function onSubmit(e: React.FormEvent) {
 		e.preventDefault();
@@ -31,7 +36,7 @@ export function RegisterForm({
 			const res = await fetch("/api/register", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ eventId, ...values }),
+				body: JSON.stringify({ eventId, ...values, consent }),
 			});
 			const data = await res.json();
 			if (res.ok) {
@@ -86,6 +91,17 @@ export function RegisterForm({
 				placeholder="Apellidos"
 				onChange={(e) => set("last_name", e.target.value)}
 			/>
+			{dniField && (
+				<input
+					className={inputCls}
+					type={dniField.type}
+					placeholder={
+						dniField.required ? `${dniField.label} *` : dniField.label
+					}
+					required={dniField.required}
+					onChange={(e) => set(dniField.key, e.target.value)}
+				/>
+			)}
 			<input
 				className={inputCls}
 				type="email"
@@ -93,7 +109,7 @@ export function RegisterForm({
 				required
 				onChange={(e) => set("email", e.target.value)}
 			/>
-			{fields.map((f) => (
+			{restFields.map((f) => (
 				<input
 					key={f.key}
 					className={inputCls}
@@ -103,6 +119,19 @@ export function RegisterForm({
 					onChange={(e) => set(f.key, e.target.value)}
 				/>
 			))}
+			<label className="mt-1 flex items-start gap-2 text-xs leading-relaxed text-white/70">
+				<input
+					type="checkbox"
+					required
+					checked={consent}
+					onChange={(e) => setConsent(e.target.checked)}
+					className="mt-0.5 shrink-0"
+				/>
+				<span>
+					Acepto el tratamiento de mis datos personales y mi imagen para la
+					gestión de mi acceso al evento, conforme a la Ley N° 29733 (Perú).
+				</span>
+			</label>
 			<button
 				type="submit"
 				disabled={status === "sending"}
