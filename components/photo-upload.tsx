@@ -48,16 +48,6 @@ export function PhotoUpload({ magicToken }: { magicToken: string }) {
 				required
 				className="text-sm text-[#e8e8f0] file:mr-3 file:rounded-md file:border-0 file:bg-[#6f5ff2] file:px-3 file:py-2 file:text-white"
 			/>
-			<label className="flex items-start gap-2 text-xs text-white/70">
-				<input
-					type="checkbox"
-					name="consent"
-					value="true"
-					required
-					className="mt-0.5"
-				/>
-				Acepto que mi foto se use para generar mi badge del evento (Ley 29733).
-			</label>
 			<Button type="submit" disabled={status === "sending"}>
 				{status === "sending" ? "Subiendo…" : "Subir foto"}
 			</Button>

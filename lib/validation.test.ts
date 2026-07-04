@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { registerSchema } from "./validation";
 
-const base = { name: "Ana", email: "ana@example.com" };
+const base = { name: "Ana", email: "ana@example.com", consent: true as const };
 
 describe("registerSchema", () => {
-	it("accepts minimal valid input (name + email)", () => {
+	it("accepts minimal valid input (name + email + consent)", () => {
 		expect(registerSchema.parse(base)).toMatchObject(base);
+	});
+
+	it("rejects missing consent (Ley 29733 obligatorio)", () => {
+		expect(() =>
+			registerSchema.parse({ name: "Ana", email: "ana@example.com" }),
+		).toThrow();
 	});
 
 	it("rejects missing email", () => {

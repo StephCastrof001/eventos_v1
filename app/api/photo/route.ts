@@ -13,18 +13,12 @@ const CONSENT_VERSION = "v1-ley29733"; // ADR-001
 export async function POST(req: Request) {
 	const form = await req.formData().catch(() => null);
 	const token = form?.get("magic_token");
-	const consent = form?.get("consent");
 	const file = form?.get("file");
 
+	// El consentimiento (Ley 29733) ahora se da en el registro, no acá.
 	if (typeof token !== "string" || !(file instanceof Blob)) {
 		return NextResponse.json(
 			{ ok: false, error: "bad_request" },
-			{ status: 400 },
-		);
-	}
-	if (consent !== "true") {
-		return NextResponse.json(
-			{ ok: false, error: "consent_required" },
 			{ status: 400 },
 		);
 	}
