@@ -1,68 +1,70 @@
-# Customer Journey — Evento 50 invitados (badges + certificados)
+# Customer Journey — Plataforma de Eventos HACK IA
 
-> Diagrama editable. Pegá el bloque ` ```mermaid ` en https://mermaid.live
-> o https://draw.io (Arrange > Insert > Advanced > Mermaid) para moverlo visual.
+> App propia (Next.js + Supabase). **NO Luma** (ver decisión en `CLAUDE.md`).
+> Diagrama editable: pega el bloque ` ```mermaid ` en https://mermaid.live
 
 ## Leyenda
-- 🟢 **LUMA free lo cubre**
-- 🟡 **LUMA parcial** (lo hace pero limitado/manual)
-- 🔴 **LUMA NO** → necesita otra herramienta
-- 🔒 **Requiere Luma Plus** (~$59/mes) si querés automatizar vía API
+- ✅ **Construido y funcionando**
+- ⏳ **Pendiente** (en backlog)
+- 🔜 **Futuro** (fuera del scope actual)
 
 ---
 
-## Diagrama (state machine + cobertura Luma)
+## Diagrama — journey + estado de `status`
 
 ```mermaid
 flowchart TD
-    A["1. DESCUBRIMIENTO<br/>landing evento<br/>🟢 Luma free"]:::luma
-    B["2. REGISTRO ASISTENTE<br/>form: nombre,email,rol,FOTO<br/>🟡 Luma free (foto/custom limitado)"]:::partial
-    C{"3. CURACION / APROBACION<br/>organizador revisa<br/>🟢 Luma free (approval ON)"}:::luma
-    D["3b. RECHAZO / WAITLIST<br/>🟢 Luma free (waitlist)"]:::luma
-    E["4. CONFIRMADO<br/>email 'estas dentro'<br/>🟢 Luma free"]:::luma
-    F["5. RECORDATORIOS<br/>T-24h / T-2h<br/>🟢 Luma free (email)"]:::luma
-    G["6. GEN BADGE<br/>foto+branding+QR+nombre<br/>🔴 Luma NO -> satori propio"]:::nope
-    H["7. ENVIO BADGE multicanal<br/>email + WhatsApp + link<br/>🔴 WhatsApp NO / email basico"]:::nope
-    I["8. CHECK-IN QR<br/>escanea puerta, valida<br/>🟢 Luma app (o propio)"]:::luma
-    J["9. CERTIFICADOS<br/>PDF asistencia post-evento<br/>🔴 Luma NO -> gen propio"]:::nope
-    K["10. DIFUSION / FOLLOW-UP / ANALYTICS<br/>🟡 Luma free (analytics basico)<br/>🔒 automatizar = Plus"]:::partial
+    A["1. REGISTRO<br/>form: nombres, apellidos, DNI, email,<br/>tel, empresa, cargo + consentimiento<br/>status=registered ✅"]:::ok
+    B{"2. CURACIÓN<br/>admin login (password + allowlist)<br/>aprueba/rechaza ✅"}:::ok
+    R["rejected ✅"]:::ok
+    C["3. EMAIL APROBACIÓN<br/>Resend 'Ver mi entrada →'<br/>magic link único ✅"]:::ok
+    D["4. ENTRADA (QR)<br/>/badge/&lt;magic_token&gt;<br/>QR visible desde approved ✅"]:::ok
+    E["5. BADGE REDES (opcional)<br/>sube foto → satori PNG sin QR<br/>status=badge_ready ✅"]:::ok
+    G["6. CHECK-IN<br/>staff escanea /r/&lt;qr_token&gt; en /scan<br/>valida server, status=checked_in ✅"]:::ok
+    F["RECORDATORIOS<br/>Vercel Cron 7/3/1 días ⏳"]:::pend
+    J["7. CERTIFICADOS PDF<br/>post-evento 🔜"]:::fut
 
-    A --> B --> C
-    C -->|aprueba| E
-    C -->|rechaza/lleno| D
-    E --> F --> G --> H --> I --> J --> K
-    D -.->|libera cupo| E
+    A --> B
+    B -->|aprueba| C
+    B -->|rechaza| R
+    C --> D
+    D -->|opcional| E
+    D --> G
+    E --> G
+    F -.->|antes del evento| D
+    G --> J
 
-    classDef luma fill:#1b5e20,stroke:#66bb6a,color:#fff;
-    classDef partial fill:#7c5b00,stroke:#ffca28,color:#fff;
-    classDef nope fill:#7f1d1d,stroke:#ef5350,color:#fff;
+    classDef ok fill:#1b5e20,stroke:#66bb6a,color:#fff;
+    classDef pend fill:#7c5b00,stroke:#ffca28,color:#fff;
+    classDef fut fill:#3a3a4a,stroke:#888,color:#fff;
 ```
 
 ---
 
-## Frontera Luma (resumen)
+## Puntos clave del diseño
 
-| Etapa | Luma free | Necesita otra tool |
-|---|---|---|
-| 1 Descubrimiento | ✅ | — |
-| 2 Registro + foto | ⚠️ básico | form propio si querés foto/branding |
-| 3 Curación/aprobación | ✅ | — |
-| 3b Rechazo/waitlist | ✅ | — |
-| 4 Confirmado | ✅ | — |
-| 5 Recordatorios | ✅ | — |
-| **6 Badge (foto+QR)** | ❌ | **satori (propio)** |
-| **7 Envío multicanal** | ❌ WhatsApp | **Resend + wa.me/Twilio** |
-| 8 Check-in QR | ✅ app Luma | propio si querés dashboard custom |
-| **9 Certificados PDF** | ❌ | **gen propio (satori/pdf-lib)** |
-| 10 Difusión/analytics | ⚠️ básico | 🔒 API (Plus) o tool propia |
-
-**Luma free te cubre 1–5 + 8.** Lo que SÍ o SÍ construyes: **6, 7, 9** (badge, envío WhatsApp, certificados).
+- **Entrada = QR, no la foto.** El QR de check-in está disponible apenas se
+  aprueba al invitado (`status=approved`). La foto es **opcional** y solo mejora
+  el badge para compartir en redes. Antes la foto bloqueaba la entrada → guests
+  sin foto no tenían QR (gap que resolvió S-A).
+- **Un solo link para todo.** El email de aprobación lleva `/badge/<magic_token>`.
+  Esa misma página: muestra el QR de entrada, permite subir foto y descargar el
+  badge. No hay QR-imagen en el email — el link es la entrada.
+- **`magic_token` vs `qr_token`.** El `magic_token` autentica la página
+  self-service (sin cuenta). El `qr_token` va dentro del QR y se valida
+  server-side en el check-in. Nunca se expone el `guest_id`.
+- **Check-in staff-only.** La cámara viva vive en `/scan`, gated por
+  `requireAdmin()`. Un invitado que abre `/r/<qr_token>` no ve datos; solo el
+  staff logueado dispara la validación.
 
 ---
 
-## Decisión de arquitectura (según presupuesto)
+## Tokens y seguridad
 
-- **Opción $0:** Luma free para 1–5 + 8 → export CSV manual → tu app (Next.js + satori) hace 6,7,9.
-  - Contra: CSV manual, sin tiempo-real, sin API.
-- **Opción Plus ($59/mes):** API conecta todo, tiempo-real, badge/cert auto al confirmar.
-- **Opción sin Luma:** form propio (Tally free webhook) → tu app hace TODO el journey. $0 + tiempo-real, pero construís registro.
+| Token | Dónde | Uso | Regla |
+|---|---|---|---|
+| `magic_token` | email → `/badge/<token>` | página self-service (QR + foto + badge) | uno por invitado, reusado |
+| `qr_token` | dentro del QR → `/r/<token>` | check-in staff | ≠ `guest_id`, valida server |
+
+> ⚠️ Compartir `/badge/<magic_token>` en redes filtra el token (deuda #9,
+> despriorizada). El badge de descarga va sin QR para mitigar.

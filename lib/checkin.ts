@@ -11,7 +11,9 @@ export function decideCheckin(current: GuestStatus | null): CheckinResult {
 	if (current === "checked_in") {
 		return { ok: false, error: "already" };
 	}
-	if (current === "badge_ready") {
+	// La foto es opcional: se puede hacer check-in desde approved (sin badge)
+	// o desde badge_ready (subió foto). El QR/entrada vale desde la aprobación.
+	if (current === "approved" || current === "badge_ready") {
 		return { ok: true, next: "checked_in" };
 	}
 	return { ok: false, error: "not_approved" };

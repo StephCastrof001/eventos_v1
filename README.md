@@ -1,37 +1,11 @@
-# 🎟️ Customer Journey — Evento 50 invitados (Badges + Certificados)
+# 🎟️ Customer Journey — Plataforma de Eventos HACK IA
 
-Mapa del recorrido del invitado: **registro → confirmación → badge → check-in → certificados**.
-Marca hasta dónde llega **Luma free** y qué se construye aparte.
+App propia (Next.js + Supabase) para el ciclo del invitado:
+**registro → curación → entrada (QR) → badge → check-in → certificado**.
 
-> Día del evento = **D (2026-08-01, ejemplo)**. Cambiá las fechas y el gráfico se reacomoda.
-> 🔴 rojo = Luma NO lo hace, lo construís vos · ✅ verde = Luma free lo cubre.
-
----
-
-## 📅 Timeline
-
-```mermaid
-gantt
-    title Customer Journey - Evento Badges + Certificados
-    dateFormat YYYY-MM-DD
-    axisFormat %d-%b
-
-    section Luma free cubre
-    1 Descubrimiento landing      :done, des, 2026-07-02, 28d
-    2 Registro asistentes         :done, reg, 2026-07-02, 20d
-    3 Curacion / aprobacion       :done, cur, 2026-07-23, 2d
-    4 Confirmado (email)          :done, con, 2026-07-24, 1d
-    7 Recordatorios               :done, rem, 2026-07-30, 2d
-    8 Check-in QR (dia evento)    :milestone, chk, 2026-08-01, 0d
-
-    section Construyes vos (Luma NO)
-    5 Generar badge foto+QR       :crit, bad, 2026-07-25, 2d
-    6 Envio badge WhatsApp+email  :crit, env, 2026-07-25, 3d
-    9 Certificados PDF            :crit, cer, 2026-08-03, 2d
-
-    section Post-evento
-    10 Difusion / Analytics       :active, ana, 2026-08-04, 3d
-```
+> Decisión de arquitectura: **NO Luma**. App propia sobre Supabase
+> (Postgres + Storage + Auth) junta DB, fotos y magic-link gratis.
+> Multi-evento desde el día 1 (`event_id` en toda query). Ver `CLAUDE.md`.
 
 ---
 
@@ -39,55 +13,76 @@ gantt
 
 ```mermaid
 flowchart LR
-    A["1 Registro datos<br/>(sin foto)"] --> B{"2 Curacion<br/>aprobamos a mano"}
-    B -->|sin cupo| W["Waitlist<br/>libera -> aprueba"]
-    W -.->|cupo libre| B
-    B -->|aprobado| C["3 Mail MAGIC LINK"]:::propio
-    C --> D["4 Sube FOTO<br/>(datos precargados)"]:::propio
-    D --> E["5 Genera QR + badge<br/>descarga + mail"]:::propio
-    E --> F["6 Recordatorio<br/>D-2 / dia"]
-    F --> G["7 Check-in QR<br/>Dia D"]
-    G --> H["8 Certificado<br/>post-evento"]:::propio
+    A["1 Registro<br/>form sin foto<br/>status=registered"] --> B{"2 Curación<br/>admin aprueba"}
+    B -->|rechaza| R["rejected"]
+    B -->|aprueba| C["3 Email 'Ver mi entrada'<br/>magic link único"]:::propio
+    C --> D["4 /badge/&lt;magic_token&gt;<br/>QR ENTRADA visible<br/>status=approved"]:::propio
+    D --> E["5 (opcional) sube foto<br/>→ badge PNG redes<br/>status=badge_ready"]:::propio
+    D --> G["6 Check-in<br/>staff escanea /r/&lt;qr_token&gt;<br/>status=checked_in"]:::propio
+    E --> G
+    G --> H["7 Certificado PDF<br/>post-evento (futuro)"]:::futuro
 
-    classDef propio fill:#7f1d1d,stroke:#ef5350,color:#fff;
+    classDef propio fill:#1b3a5c,stroke:#4a9eff,color:#fff;
+    classDef futuro fill:#3a3a4a,stroke:#888,color:#fff;
 ```
 
-> 🔴 rojo = self-service badge (magic link + subir foto + generar + certificado) → **Luma NO lo hace, app propia**.
-> ✅ Luma cubre registro (1), aprobación (2), recordatorio (6), check-in (7).
+**Clave del diseño:** la **entrada = el QR**, disponible desde que se aprueba.
+El invitado recibe **un solo link** (`/badge/<magic_token>`) que hace todo:
+muestra el QR de entrada, permite subir foto (opcional) y descargar el badge
+para redes. La foto **no bloquea** el ingreso — solo mejora el badge social.
 
 ---
 
-## 🧩 Frontera Luma free vs construir
+## 🔑 State machine
 
-| # | Etapa | Fecha | Herramienta | Luma free |
-|---|---|---|---|---|
-| 1 | Descubrimiento | D-30 | Luma / landing | ✅ |
-| 2 | Registro (foto) | D-30 → D-10 | Luma / Tally free | ⚠️ foto limitada |
-| 3 | Curación | D-9 | Luma / dashboard | ✅ |
-| 3b | Rechazo / Waitlist | D-8 | Luma | ✅ |
-| 4 | Confirmado | D-8 | Luma / Resend | ✅ |
-| 5 | **Badge foto+QR** | D-7 | satori | ❌ construir |
-| 6 | **Envío WhatsApp+email** | D-7 | Resend + wa.me | ❌ construir |
-| 7 | Recordatorios | D-2 | Luma / Resend | ✅ |
-| 8 | Check-in QR | Día D | Luma app / propio | ✅ |
-| 9 | **Certificados PDF** | D+2 | pdf-lib | ❌ construir |
-| 10 | Difusión / Analytics | D+3 | Luma básico | ⚠️ API = Plus |
+```mermaid
+stateDiagram-v2
+    [*] --> registered: se inscribe
+    registered --> approved: admin aprueba
+    registered --> rejected: admin rechaza
+    approved --> badge_ready: sube foto (opcional)
+    approved --> checked_in: staff escanea QR
+    badge_ready --> checked_in: staff escanea QR
+    approved --> canceled
+    registered --> canceled
+```
+
+- **`magic_token`** — un token por invitado. Reusado para el link único
+  (QR entrada + subir foto + descargar badge). Nunca expira.
+- **`qr_token`** — token aleatorio del QR de entrada. **≠ `guest_id`.**
+  El check-in valida server-side en `/r/<qr_token>`.
 
 ---
 
-## 💸 Costo según camino
+## 🧩 Etapas y estado de construcción
 
-| Camino | Costo | Nota |
-|---|---|---|
-| Luma free + app propia | **$0** | Luma cubre 1–4,7,8. Export CSV manual → tu app hace 5,6,9 |
-| Luma Plus + API | ~$59/mes | Todo automático, tiempo-real |
-| Sin Luma (Tally free) | **$0** | Form propio webhook → tu app hace TODO, tiempo-real |
+| # | Etapa | Ruta / mecanismo | Estado |
+|---|---|---|---|
+| 1 | Registro | `/` form (nombres, apellidos, DNI, email, tel, empresa, cargo) + consentimiento Ley 29733 | ✅ |
+| 2 | Curación | `/admin` login password compartida + allowlist (`ADMIN_EMAILS`) | ✅ |
+| 3 | Email aprobación | Resend — "Ver mi entrada →" con magic link | ✅ |
+| 4 | **Entrada (QR)** | `/badge/<magic_token>` — QR desde `approved` | ✅ |
+| 5 | Badge foto+redes | subir foto opcional → satori PNG (descarga sin QR) | ✅ |
+| 6 | Check-in staff | `/scan` (gated) escanea `/r/<qr_token>`, valida server | ✅ |
+| 7 | Recordatorios | Vercel Cron 7/3/1 días o fechas fijas | ⏳ pendiente (#24) |
+| 8 | Certificados PDF | pdf-lib post-evento | 🔜 futuro |
 
-> ⚠️ Sin **Luma Plus** no hay API: solo export CSV manual. Certificados e integraciones requieren Plus o construir aparte.
+---
+
+## 🔒 Reglas de dominio (no romper)
+
+- **Multi-evento:** toda query de guests filtra por `event_id`. Nunca global.
+- **`qr_token` ≠ `guest_id`:** el QR lleva token aleatorio; check-in valida server.
+- **Check-in staff-only:** cámara viva en `/scan` gated por `requireAdmin()`.
+  Un no-staff que abre `/r/<qr_token>` no ve nada; el staff logueado valida.
+- **NUNCA borrar `guests` tras mandar mails reales** — el link del mail lleva el
+  `magic_token`; borrar el guest deja el link muerto (404). Ver `CLAUDE.md`.
+- **Ponentes/speakers = OUT OF SCOPE.**
 
 ---
 
 ## 📂 Docs del proyecto
-- [`TIMELINE.md`](./TIMELINE.md) — gráficos timeline
-- [`RESEARCH.md`](./RESEARCH.md) — repos, costos, links, jerga
+- [`CLAUDE.md`](./CLAUDE.md) — guía técnica, stack, convenciones, DoD
 - [`JOURNEY.md`](./JOURNEY.md) — state machine detallada
+- [`RESEARCH.md`](./RESEARCH.md) — repos, costos, jerga
+- [`docs/prds/PRD-event-platform.md`](./docs/prds/PRD-event-platform.md) — PRD
