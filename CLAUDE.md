@@ -56,6 +56,13 @@ pnpm lint           # biome check
 - **State machine de `status`**: solo transiciones válidas (ver PRD §5). No saltar estados.
 - **Ponentes/speakers = OUT OF SCOPE.** No agregar lógica de speakers.
 
+## Operación en producción (no romper)
+
+- **NUNCA borrar la tabla `guests` después de mandar mails reales.** Los mails de
+  aprobación llevan un link con el `magic_token` de esa fila; si borrás el guest, el
+  link queda muerto (404 "page not found"). Borrar guests SOLO en testing, nunca en
+  el evento real con invitados que ya recibieron su mail.
+
 ## Definition of Done
 
 DONE = **demo verificable con datos reales**, no "código escrito".
