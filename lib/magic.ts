@@ -9,6 +9,7 @@ export interface MagicGuest {
 	last_name: string | null;
 	status: GuestStatus;
 	photo_url: string | null;
+	qr_token: string;
 }
 
 /** Lee un invitado por su magic_token (server). Null si no existe. */
@@ -18,7 +19,7 @@ export async function getGuestByMagicToken(
 	const sb = createAdminSupabase();
 	const { data, error } = await sb
 		.from("guests")
-		.select("id, event_id, name, last_name, status, photo_url")
+		.select("id, event_id, name, last_name, status, photo_url, qr_token")
 		.eq("magic_token", token)
 		.maybeSingle();
 	if (error) throw error;
