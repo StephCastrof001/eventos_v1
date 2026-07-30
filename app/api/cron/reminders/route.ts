@@ -25,23 +25,32 @@ interface ReminderGuest {
 	reminder_sent: number[] | null;
 }
 
+/** Datos del evento que son iguales para todos los invitados de una corrida. */
+interface EventContext {
+	eventName: string;
+	dateStr: string;
+	daysBefore: number;
+	agendaUrl: string;
+	appUrl: string;
+	location?: string | null;
+	locationUrl?: string | null;
+}
+
 /** Arma el input del email para un invitado. El CTA de badge solo si aún no lo hizo. */
 function buildInput(
 	guest: ReminderGuest,
-	eventName: string,
-	dateStr: string,
-	daysBefore: number,
-	agendaUrl: string,
-	appUrl: string,
+	ctx: EventContext,
 ): ReminderEmailInput {
 	const needsBadge = guest.status === "approved"; // approved = sin foto/badge todavía
 	return {
 		name: guest.name,
-		eventName,
-		dateStr,
-		daysBefore,
-		agendaUrl,
-		badgeUrl: needsBadge ? buildMagicUrl(appUrl, guest.magic_token) : null,
+		eventName: ctx.eventName,
+		dateStr: ctx.dateStr,
+		daysBefore: ctx.daysBefore,
+		agendaUrl: ctx.agendaUrl,
+		location: ctx.location,
+		locationUrl: ctx.locationUrl,
+		badgeUrl: needsBadge ? buildMagicUrl(ctx.appUrl, guest.magic_token) : null,
 	};
 }
 
@@ -84,7 +93,7 @@ export async function GET(req: Request) {
 	// Eventos futuros con fecha
 	const { data: events, error: evErr } = await sb
 		.from("events")
-		.select("id, slug, name, event_date, end_date")
+		.select("id, slug, name, event_date, end_date, location, location_url")
 		.not("event_date", "is", null)
 		.gte("event_date", now.toISOString());
 	if (evErr) {
@@ -109,8 +118,17 @@ export async function GET(req: Request) {
 			continue;
 		}
 
-		const dateStr = formatEventDateRange(ev.event_date, ev.end_date);
-		const agendaUrl = `${appUrl.replace(/\/$/, "")}/e/${ev.slug}#agenda`;
+		// La agenda apunta a su propia página (sin formulario de inscripción): el
+		// invitado ya aprobado no debe aterrizar en un "Solicitar unirse".
+		const ctx: EventContext = {
+			eventName: ev.name,
+			dateStr: formatEventDateRange(ev.event_date, ev.end_date),
+			daysBefore: offset,
+			agendaUrl: `${appUrl.replace(/\/$/, "")}/e/${ev.slug}/agenda`,
+			appUrl,
+			location: ev.location,
+			locationUrl: ev.location_url,
+		};
 
 		// Candidatos: aprobados o con badge, no check-in / rechazados (filtrado por status).
 		const { data: guests, error: gErr } = await sb
@@ -160,7 +178,7 @@ export async function GET(req: Request) {
 		let failed = 0;
 		const errors: string[] = [];
 		for (const g of targets) {
-			const input = buildInput(g, ev.name, dateStr, offset, agendaUrl, appUrl);
+			const input = buildInput(g, ctx);
 			const r = await sendReminderEmail(g.email, input);
 			if (!r.ok) {
 				failed++;
