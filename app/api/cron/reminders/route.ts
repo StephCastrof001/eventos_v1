@@ -3,6 +3,7 @@ import { sendReminderEmail } from "@/lib/email";
 import type { ReminderEmailInput } from "@/lib/email-template";
 import { getEnv } from "@/lib/env";
 import { formatEventDateRange } from "@/lib/format-date";
+import { buildLogRow, type ReminderLogRow } from "@/lib/reminder-log";
 import {
 	alreadySent,
 	daysUntilEvent,
@@ -177,9 +178,13 @@ export async function GET(req: Request) {
 		let sent = 0;
 		let failed = 0;
 		const errors: string[] = [];
+		const logRows: ReminderLogRow[] = [];
 		for (const g of targets) {
 			const input = buildInput(g, ctx);
 			const r = await sendReminderEmail(g.email, input);
+			// La bitácora registra el intento pase lo que pase: sin las filas
+			// fallidas, un rebote no dejaría rastro en ningún lado.
+			logRows.push(buildLogRow(ev.id, g, offset, r));
 			if (!r.ok) {
 				failed++;
 				if (r.error) errors.push(`${g.email}: ${r.error}`);
@@ -191,6 +196,13 @@ export async function GET(req: Request) {
 				.from("guests")
 				.update({ reminder_sent: [...(g.reminder_sent ?? []), offset] })
 				.eq("id", g.id);
+		}
+
+		// Un solo insert por evento. Si la bitácora falla, se reporta pero NO se
+		// aborta: perder el registro es malo, perder el envío es peor.
+		const { error: logErr } = await sb.from("reminder_log").insert(logRows);
+		if (logErr) {
+			errors.push(`bitacora: ${logErr.message}`);
 		}
 
 		results.push({

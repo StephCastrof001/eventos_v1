@@ -34,11 +34,27 @@ export function daysUntilEvent(eventDate: Date, now: Date): number {
 }
 
 /**
- * Devuelve el offset que corresponde HOY (si `daysUntil` coincide con uno
- * configurado), o null si hoy no toca ningún recordatorio.
+ * Offset vigente hoy: el más chico de los configurados que todavía sea >=
+ * `daysUntil`. Devuelve null si el evento está demasiado lejos (ningún offset
+ * alcanza) o si ya pasó.
+ *
+ * La igualdad exacta (`offsets.includes(daysUntil)`) era frágil: si el cron no
+ * corría justo el día del offset -- Vercel caído, deploy en curso, el schedule
+ * corrido unos minutos sobre el cambio de día -- ese recordatorio no se enviaba
+ * nunca más, porque al día siguiente `daysUntil` ya no coincidía con ninguno.
+ *
+ * Con ">= daysUntil" la ventana queda abierta hasta el offset siguiente: a 10
+ * días vence el de 10 y sigue vigente los días 9, 8, 7 y 6; a 5 días toma el
+ * relevo el de 5. Combinado con `alreadySent`, el que sí se envió no se repite,
+ * y el que se perdió sale apenas el cron vuelve a correr.
+ *
+ * Efecto secundario deseado: un invitado aprobado tarde recibe el recordatorio
+ * de la etapa en curso en vez de quedarse sin ninguno.
  */
 export function dueOffset(daysUntil: number, offsets: number[]): number | null {
-	return offsets.includes(daysUntil) ? daysUntil : null;
+	if (daysUntil < 0) return null;
+	const vigentes = offsets.filter((o) => o >= daysUntil);
+	return vigentes.length > 0 ? Math.min(...vigentes) : null;
 }
 
 /** ¿Ya se envió ese offset a este invitado? (idempotencia) */
