@@ -5,6 +5,7 @@ import {
 	daysUntilEvent,
 	dueOffset,
 	parseReminderOffsets,
+	sameEmail,
 } from "./reminders";
 
 describe("parseReminderOffsets", () => {
@@ -63,5 +64,17 @@ describe("alreadySent", () => {
 
 	it("false si aún no se envió ese offset", () => {
 		expect(alreadySent([10], 5)).toBe(false);
+	});
+});
+
+describe("sameEmail", () => {
+	it("ignora mayúsculas y espacios", () => {
+		expect(sameEmail("  Persona@Ejemplo.COM ", "persona@ejemplo.com")).toBe(
+			true,
+		);
+	});
+
+	it("distingue dominios parecidos (.co vs .com)", () => {
+		expect(sameEmail("persona@ejemplo.co", "persona@ejemplo.com")).toBe(false);
 	});
 });

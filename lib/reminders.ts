@@ -45,3 +45,12 @@ export function dueOffset(daysUntil: number, offsets: number[]): number | null {
 export function alreadySent(reminderSent: number[], offset: number): boolean {
 	return reminderSent.includes(offset);
 }
+
+/**
+ * Compara emails ignorando mayúsculas y espacios de los costados.
+ * Usado por el parámetro `only` del cron para acotar el envío a un invitado
+ * concreto de la base, sin cambiar el camino de código del envío masivo.
+ */
+export function sameEmail(a: string, b: string): boolean {
+	return a.trim().toLowerCase() === b.trim().toLowerCase();
+}

@@ -8,6 +8,7 @@ import {
 	daysUntilEvent,
 	dueOffset,
 	parseReminderOffsets,
+	sameEmail,
 } from "@/lib/reminders";
 import { createAdminSupabase } from "@/lib/supabase/server";
 import { buildMagicUrl } from "@/lib/urls";
@@ -60,10 +61,18 @@ export async function GET(req: Request) {
 	}
 
 	const url = new URL(req.url);
-	const testEmail = url.searchParams.get("test"); // modo prueba: manda 1 a este correo
-	const dry = url.searchParams.get("dry") === "1"; // calcula pero no envía ni marca
-	// force=N: fuerza el offset N (ignora la fecha real). Para probar el pipeline
-	// cualquier día sin esperar al 10/5/1. Solo con CRON_SECRET, no es público.
+	// Un solo pipeline: siempre se lee la base, se arma el mail con el mismo
+	// builder y se marca reminder_sent. Los parámetros NO crean caminos
+	// alternativos, solo acotan el conjunto de destinatarios:
+	//
+	// only=mail  → restringe el envío a ese invitado de la base. Es el envío
+	//              REAL, idéntico al masivo, sobre una sola fila. Sirve de prueba
+	//              porque ejecuta exactamente el mismo código que el envío a todos.
+	// dry=1      → recorre y lista a quién le tocaría hoy, sin enviar ni marcar.
+	// force=N    → fuerza el offset N ignorando la fecha real, para probar el
+	//              pipeline cualquier día sin esperar al 10/5/1.
+	const onlyEmail = url.searchParams.get("only");
+	const dry = url.searchParams.get("dry") === "1";
 	const forceRaw = url.searchParams.get("force");
 	const force = forceRaw ? Number.parseInt(forceRaw, 10) : null;
 
@@ -103,27 +112,6 @@ export async function GET(req: Request) {
 		const dateStr = formatEventDateRange(ev.event_date, ev.end_date);
 		const agendaUrl = `${appUrl.replace(/\/$/, "")}/e/${ev.slug}#agenda`;
 
-		// Modo prueba: manda UN correo de muestra, sin tocar DB.
-		if (testEmail) {
-			const sample: ReminderEmailInput = {
-				name: "Prueba",
-				eventName: ev.name,
-				dateStr,
-				daysBefore: offset,
-				agendaUrl,
-				badgeUrl: null,
-			};
-			const r = await sendReminderEmail(testEmail, sample);
-			results.push({
-				event: ev.slug,
-				offset,
-				test: testEmail,
-				ok: r.ok,
-				error: r.error,
-			});
-			continue;
-		}
-
 		// Candidatos: aprobados o con badge, no check-in / rechazados (filtrado por status).
 		const { data: guests, error: gErr } = await sb
 			.from("guests")
@@ -135,32 +123,66 @@ export async function GET(req: Request) {
 			continue;
 		}
 
+		const all = (guests ?? []) as ReminderGuest[];
+		// Idempotencia primero: nadie recibe dos veces el mismo offset.
+		const pending = all.filter(
+			(g) => !alreadySent(g.reminder_sent ?? [], offset),
+		);
+		// `only` solo recorta el conjunto. Sin él, van todos los pendientes.
+		const targets = onlyEmail
+			? pending.filter((g) => sameEmail(g.email, onlyEmail))
+			: pending;
+
+		if (dry) {
+			results.push({
+				event: ev.slug,
+				offset,
+				would_send: targets.length,
+				emails: targets.map((g) => g.email),
+				dry: true,
+			});
+			continue;
+		}
+
+		if (targets.length === 0) {
+			results.push({
+				event: ev.slug,
+				offset,
+				sent: 0,
+				skipped: onlyEmail
+					? `no hay invitado pendiente con email ${onlyEmail}`
+					: "todos ya recibieron este recordatorio",
+			});
+			continue;
+		}
+
 		let sent = 0;
 		let failed = 0;
-		for (const g of (guests ?? []) as ReminderGuest[]) {
-			const already = g.reminder_sent ?? [];
-			if (alreadySent(already, offset)) continue;
-
-			if (dry) {
-				sent++;
-				continue;
-			}
-
+		const errors: string[] = [];
+		for (const g of targets) {
 			const input = buildInput(g, ev.name, dateStr, offset, agendaUrl, appUrl);
 			const r = await sendReminderEmail(g.email, input);
 			if (!r.ok) {
 				failed++;
+				if (r.error) errors.push(`${g.email}: ${r.error}`);
 				continue;
 			}
+			sent++;
 			// Marca el offset como enviado (idempotencia).
 			await sb
 				.from("guests")
-				.update({ reminder_sent: [...already, offset] })
+				.update({ reminder_sent: [...(g.reminder_sent ?? []), offset] })
 				.eq("id", g.id);
-			sent++;
 		}
 
-		results.push({ event: ev.slug, offset, sent, failed, dry });
+		results.push({
+			event: ev.slug,
+			offset,
+			sent,
+			failed,
+			...(errors.length > 0 ? { errors } : {}),
+			...(onlyEmail ? { restringido_a: onlyEmail } : {}),
+		});
 	}
 
 	return NextResponse.json({ ok: true, ran_at: now.toISOString(), results });
