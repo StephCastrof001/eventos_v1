@@ -188,6 +188,10 @@ export interface ReminderEmailInput {
 	agendaUrl: string;
 	/** Si viene, incluye CTA "Haz tu credencial"; si null/undefined, omite el bloque. */
 	badgeUrl?: string | null;
+	/** Dirección del evento. Un recordatorio sin el "dónde" obliga a buscarlo aparte. */
+	location?: string | null;
+	/** Link al pin en Maps; si viene, la dirección se vuelve clickeable. */
+	locationUrl?: string | null;
 }
 
 /**
@@ -219,13 +223,14 @@ export function buildReminderEmail(input: ReminderEmailInput): {
 			: `Faltan ${input.daysBefore} días 📅`;
 
 	const badgeCtaHtml = buildBadgeCta(input.badgeUrl);
+	const locationHtml = buildLocationRow(input.location, input.locationUrl);
 
 	const body = `
     <h1 style="margin:0 0 16px 0; font-size:24px; color:#e8e8f0;">${urgencia}</h1>
     <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Hola <strong style="color:#e8e8f0;">${safeName}</strong>,</p>
     <p style="margin:0 0 4px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Te recordamos que <strong style="color:#e8e8f0;">${safeEventName}</strong> es pronto. ¡No te lo pierdas!</p>
     <div style="margin:20px 0; padding:16px; background-color:#0c0c14; border:1px solid #2a2a3a; border-radius:10px; text-align:left;">
-      <p style="margin:0; font-size:14px; color:#c9c9d6;">🗓️ <strong style="color:#e8e8f0;">${safeDateStr}</strong></p>
+      <p style="margin:0; font-size:14px; color:#c9c9d6;">🗓️ <strong style="color:#e8e8f0;">${safeDateStr}</strong></p>${locationHtml}
     </div>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#6f5ff2;">
       <a href="${safeAgendaUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver agenda →</a>
@@ -236,6 +241,34 @@ export function buildReminderEmail(input: ReminderEmailInput): {
 		subject,
 		html: emailShell(`${urgencia} — ${input.eventName}`, body),
 	};
+}
+
+/**
+ * Fila de dirección del recordatorio. Si hay locationUrl válida, la dirección
+ * se vuelve un link al pin de Maps. Una URL con esquema no permitido no rompe
+ * el envío: se degrada a texto plano.
+ */
+function buildLocationRow(
+	location?: string | null,
+	locationUrl?: string | null,
+): string {
+	if (!location) return "";
+	const safeLocation = escapeHtml(location);
+	let href: string | null = null;
+	if (locationUrl) {
+		try {
+			const parsed = new URL(locationUrl);
+			if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+				href = escapeHtml(parsed.toString());
+			}
+		} catch {
+			href = null;
+		}
+	}
+	const inner = href
+		? `<a href="${href}" target="_blank" style="color:#00cfaa; text-decoration:none;">📍 ${safeLocation}</a>`
+		: `📍 ${safeLocation}`;
+	return `<p style="margin:8px 0 0 0; font-size:14px; color:#c9c9d6;">${inner}</p>`;
 }
 
 /**

@@ -124,4 +124,48 @@ describe("buildReminderEmail", () => {
 			}),
 		).toThrow();
 	});
+
+	it("incluye la direccion del evento cuando viene location", () => {
+		const { html } = buildReminderEmail({
+			...BASE_REMINDER,
+			daysBefore: 5,
+			location: "Av. Juan de Arona 720, San Isidro, Lima",
+		});
+		expect(html).toContain("Av. Juan de Arona 720, San Isidro, Lima");
+	});
+
+	it("con locationUrl la direccion es un link a Maps", () => {
+		const { html } = buildReminderEmail({
+			...BASE_REMINDER,
+			daysBefore: 5,
+			location: "Av. Juan de Arona 720",
+			locationUrl: "https://maps.google.com/?q=arona",
+		});
+		expect(html).toContain('href="https://maps.google.com/?q=arona"');
+	});
+
+	it("sin location no aparece el pin", () => {
+		const { html } = buildReminderEmail({ ...BASE_REMINDER, daysBefore: 5 });
+		expect(html).not.toContain("📍");
+	});
+
+	it("locationUrl con esquema peligroso degrada a texto, no rompe el envio", () => {
+		const { html } = buildReminderEmail({
+			...BASE_REMINDER,
+			daysBefore: 5,
+			location: "Av. Juan de Arona 720",
+			locationUrl: "javascript:alert(1)",
+		});
+		expect(html).toContain("Av. Juan de Arona 720");
+		expect(html).not.toContain("javascript:");
+	});
+
+	it("escapa html en la direccion", () => {
+		const { html } = buildReminderEmail({
+			...BASE_REMINDER,
+			daysBefore: 5,
+			location: '<script>alert("x")</script>',
+		});
+		expect(html).not.toContain("<script>");
+	});
 });
