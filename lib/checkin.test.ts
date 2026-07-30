@@ -29,11 +29,7 @@ describe("decideCheckin", () => {
 	});
 
 	it("returns not_approved for other states", () => {
-		const otherStates: GuestStatus[] = [
-			"registered",
-			"rejected",
-			"canceled",
-		];
+		const otherStates: GuestStatus[] = ["registered", "rejected", "canceled"];
 		for (const state of otherStates) {
 			expect(decideCheckin(state)).toEqual({
 				ok: false,
