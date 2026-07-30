@@ -17,6 +17,8 @@ function mockSupabase(
 	guestData: Record<string, unknown> | null,
 	fetchError: Error | { message: string } | null = null,
 	updateError: Error | { message: string } | null = null,
+	// Filas afectadas por el update (optimistic lock). [] = otra caja ganó la carrera.
+	updatedRows: Array<{ id: string }> | null = [{ id: "123" }],
 ) {
 	const mockSb = {
 		from: vi.fn(() => ({
@@ -32,7 +34,14 @@ function mockSupabase(
 			})),
 			update: vi.fn(() => ({
 				eq: vi.fn(() => ({
-					eq: vi.fn().mockResolvedValue({ error: updateError }),
+					eq: vi.fn(() => ({
+						eq: vi.fn(() => ({
+							select: vi.fn().mockResolvedValue({
+								data: updatedRows,
+								error: updateError,
+							}),
+						})),
+					})),
 				})),
 			})),
 		})),
@@ -102,6 +111,72 @@ describe("POST /api/checkin", () => {
 		const json = await res.json();
 		expect(json.ok).toBe(true);
 		expect(json.guest.status).toBe("checked_in");
+	});
+
+	test("should_write_checked_in_at_timestamp_on_checkin", async () => {
+		// Captura el payload del update para verificar que guarda la hora de ingreso.
+		const updateSpy = vi.fn(() => ({
+			eq: vi.fn(() => ({
+				eq: vi.fn(() => ({
+					eq: vi.fn(() => ({
+						select: vi
+							.fn()
+							.mockResolvedValue({ data: [{ id: "123" }], error: null }),
+					})),
+				})),
+			})),
+		}));
+		const mockSb = {
+			from: vi.fn(() => ({
+				select: vi.fn(() => ({
+					eq: vi.fn(() => ({
+						eq: vi.fn(() => ({
+							single: vi.fn().mockResolvedValue({
+								data: { id: "123", name: "John", status: "approved" },
+								error: null,
+							}),
+						})),
+					})),
+				})),
+				update: updateSpy,
+			})),
+		};
+		// biome-ignore lint/suspicious/noExplicitAny: mock
+		(createAdminSupabase as any).mockReturnValue(mockSb);
+
+		const req = new Request("http://localhost/api/checkin", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ qrToken: "abc", eventId }),
+		});
+		await POST(req);
+
+		expect(updateSpy).toHaveBeenCalledWith(
+			expect.objectContaining({
+				status: "checked_in",
+				checked_in_at: expect.any(String),
+			}),
+		);
+	});
+
+	test("should_return_409_when_race_lost_zero_rows_updated", async () => {
+		// Invitado válido al leer, pero el update afecta 0 filas: otra caja de staff
+		// ya lo escaneó entre el fetch y el update (optimistic lock lo detecta).
+		mockSupabase(
+			{ id: "123", name: "John", status: "approved" },
+			null,
+			null,
+			[],
+		);
+		const req = new Request("http://localhost/api/checkin", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ qrToken: "abc", eventId }),
+		});
+		const res = await POST(req);
+		expect(res.status).toBe(409);
+		const json = await res.json();
+		expect(json.reason).toBe("already_checked_in");
 	});
 
 	test("should_filter_by_event_id", async () => {

@@ -1,3 +1,5 @@
+import { formatEventDateRange } from "./format-date";
+
 export interface ApprovalEmailInput {
 	name: string;
 	magicUrl: string;
@@ -126,34 +128,7 @@ export function buildPendingEmail(
 	const safeName = escapeHtml(name);
 	const safeEventName = escapeHtml(eventName);
 
-	let dateStr = "";
-	if (eventDate) {
-		const startD = new Date(eventDate);
-		dateStr = startD.toLocaleDateString("es-PE", {
-			weekday: "long",
-			month: "long",
-			day: "numeric",
-			hour: "2-digit",
-			minute: "2-digit",
-		});
-		if (endDate) {
-			const endD = new Date(endDate);
-			if (startD.toLocaleDateString() === endD.toLocaleDateString()) {
-				dateStr += ` - ${endD.toLocaleTimeString("es-PE", {
-					hour: "2-digit",
-					minute: "2-digit",
-				})}`;
-			} else {
-				dateStr += ` hasta ${endD.toLocaleDateString("es-PE", {
-					weekday: "long",
-					month: "long",
-					day: "numeric",
-					hour: "2-digit",
-					minute: "2-digit",
-				})}`;
-			}
-		}
-	}
+	const dateStr = formatEventDateRange(eventDate, endDate);
 
 	const locationRow = eventLocation
 		? locationUrl
@@ -200,4 +175,85 @@ export function buildPendingEmail(
 			body,
 		),
 	};
+}
+
+export interface ReminderEmailInput {
+	name: string;
+	eventName: string;
+	/** Fecha ya formateada, ej. "miércoles 19 de agosto, 19:00 - 21:00". */
+	dateStr: string;
+	/** Días restantes al evento. Valores esperados: 10 | 5 | 1. */
+	daysBefore: number;
+	/** URL a la agenda del evento; genera el botón "Ver agenda". */
+	agendaUrl: string;
+	/** Si viene, incluye CTA "Haz tu credencial"; si null/undefined, omite el bloque. */
+	badgeUrl?: string | null;
+}
+
+/**
+ * Email de recordatorio al evento (10/5/1 días antes).
+ * Reutiliza emailShell y escapeHtml del módulo. Valida esquemas URL (http/https).
+ */
+export function buildReminderEmail(input: ReminderEmailInput): {
+	subject: string;
+	html: string;
+} {
+	const safeName = escapeHtml(input.name);
+	const safeEventName = escapeHtml(input.eventName);
+	const safeDateStr = escapeHtml(input.dateStr);
+
+	const parsedAgenda = new URL(input.agendaUrl);
+	if (parsedAgenda.protocol !== "https:" && parsedAgenda.protocol !== "http:") {
+		throw new Error("agendaUrl: esquema no permitido");
+	}
+	const safeAgendaUrl = escapeHtml(parsedAgenda.toString());
+
+	const subject =
+		input.daysBefore === 1
+			? `Mañana: ${input.eventName}`
+			: `Faltan ${input.daysBefore} días — ${input.eventName}`;
+
+	const urgencia =
+		input.daysBefore === 1
+			? "¡Nos vemos mañana! 🚀"
+			: `Faltan ${input.daysBefore} días 📅`;
+
+	const badgeCtaHtml = buildBadgeCta(input.badgeUrl);
+
+	const body = `
+    <h1 style="margin:0 0 16px 0; font-size:24px; color:#e8e8f0;">${urgencia}</h1>
+    <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Hola <strong style="color:#e8e8f0;">${safeName}</strong>,</p>
+    <p style="margin:0 0 4px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Te recordamos que <strong style="color:#e8e8f0;">${safeEventName}</strong> es pronto. ¡No te lo pierdas!</p>
+    <div style="margin:20px 0; padding:16px; background-color:#0c0c14; border:1px solid #2a2a3a; border-radius:10px; text-align:left;">
+      <p style="margin:0; font-size:14px; color:#c9c9d6;">🗓️ <strong style="color:#e8e8f0;">${safeDateStr}</strong></p>
+    </div>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#6f5ff2;">
+      <a href="${safeAgendaUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver agenda →</a>
+    </td></tr></table>
+    ${badgeCtaHtml}`;
+
+	return {
+		subject,
+		html: emailShell(`${urgencia} — ${input.eventName}`, body),
+	};
+}
+
+/**
+ * Construye el bloque HTML del CTA de credencial si badgeUrl es válida.
+ * Retorna cadena vacía si badgeUrl es null/undefined.
+ */
+function buildBadgeCta(badgeUrl: string | null | undefined): string {
+	if (badgeUrl == null) return "";
+
+	const parsed = new URL(badgeUrl);
+	if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+		throw new Error("badgeUrl: esquema no permitido");
+	}
+	const safeUrl = escapeHtml(parsed.toString());
+
+	return `
+    <p style="margin:20px 0 8px 0; font-size:14px; line-height:1.6; color:#c9c9d6;">¿Aún no tienes tu credencial? Créala antes del evento:</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#00cfaa;">
+      <a href="${safeUrl}" style="display:inline-block; padding:12px 24px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#0c0c14; text-decoration:none; border-radius:10px;">Haz tu credencial →</a>
+    </td></tr></table>`;
 }

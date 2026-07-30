@@ -16,7 +16,7 @@ const CSV_PATH = path.resolve(
 let eventId: string;
 
 beforeAll(async () => {
-	const sb = createServerSupabase();
+	const sb = await createServerSupabase();
 	const { data, error } = await sb
 		.from("events")
 		.upsert(

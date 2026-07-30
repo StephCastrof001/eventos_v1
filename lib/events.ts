@@ -8,6 +8,15 @@ export interface FormField {
 	required: boolean;
 }
 
+/** Panel/charla de la agenda del evento (Bloque C). */
+export interface AgendaItem {
+	time: string; // ej. "19:00"
+	title: string;
+	speaker?: string | null;
+	role?: string | null;
+	photo_url?: string | null;
+}
+
 /** Evento (datos públicos). */
 export interface EventRow {
 	id: string;
@@ -21,6 +30,7 @@ export interface EventRow {
 	instructions?: string | null;
 	description?: string | null;
 	organizer?: string | null;
+	agenda?: AgendaItem[];
 	form_fields: FormField[];
 }
 
@@ -29,7 +39,7 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 	let { data, error } = await sb
 		.from("events")
 		.select(
-			"id, slug, name, event_date, end_date, location_type, location, location_url, instructions, description, organizer, form_fields",
+			"id, slug, name, event_date, end_date, location_type, location, location_url, instructions, description, organizer, agenda, form_fields",
 		)
 		.eq("slug", slug)
 		.maybeSingle();
@@ -63,16 +73,6 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 
 	if (error) throw error;
 	const event = data as EventRow | null;
-
-	if (event && event.slug === "test1") {
-		// DEUDA TÉCNICA (manual, demo): las columnas end_date/location_type/location_url
-		// no existen en DB todavía (refine = supabase/migrations/0002_event_location_fields.sql).
-		// Inyectadas acá para el evento de demo. Al migrar + cargar desde el form, borrar esto.
-		event.end_date = "2026-07-22T13:00:00-05:00";
-		event.location_type = "Presencial";
-		event.location_url =
-			"https://www.google.com/maps/search/?api=1&query=-12.096595299999999%2C-77.02745329999999&query_place_id=ChIJ5dJvgmjIBZERrVP4iV92cvY";
-	}
 
 	return event;
 }

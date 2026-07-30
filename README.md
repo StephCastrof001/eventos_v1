@@ -33,6 +33,25 @@ para redes. La foto **no bloquea** el ingreso — solo mejora el badge social.
 
 ---
 
+## 📅 Cronograma — evento 19 ago 2026 (7–9pm, Av. Juan de Arona 720)
+
+```mermaid
+timeline
+    title Journey con fechas — comunidad HACK IA
+    Registro y curacion : Formulario abierto en /e/test1 : Admin aprueba - mail 'Ver mi entrada' + QR
+    9 ago  · T-10 : Recordatorio automatico : Fecha + lugar + link a la agenda
+    14 ago · T-5  : Recordatorio automatico : Mantiene el interes
+    18 ago · T-1  : Recordatorio automatico : Agenda + 'Haz tu credencial' si falta
+    19 ago · 7-9pm : Evento (dia D) : Check-in con QR en la puerta
+    Post-evento : Badge para redes : Certificado PDF (futuro)
+```
+
+> Los recordatorios se disparan solos vía **Vercel Cron** (9am Lima) en los offsets
+> configurables `10/5/1`. Audiencia: aprobados y con badge, sin check-in. Modo prueba
+> manda primero a un correo antes del envío real.
+
+---
+
 ## 🔑 State machine
 
 ```mermaid
@@ -64,8 +83,9 @@ stateDiagram-v2
 | 4 | **Entrada (QR)** | `/badge/<magic_token>` — QR desde `approved` | ✅ |
 | 5 | Badge foto+redes | subir foto opcional → satori PNG (descarga sin QR) | ✅ |
 | 6 | Check-in staff | `/scan` (gated) escanea `/r/<qr_token>`, valida server | ✅ |
-| 7 | Recordatorios | Vercel Cron 7/3/1 días o fechas fijas | ⏳ pendiente (#24) |
-| 8 | Certificados PDF | pdf-lib post-evento | 🔜 futuro |
+| 7 | **Recordatorios** | Vercel Cron `10/5/1` días, 9am Lima + modo prueba + agenda | ✅ código (deploy pendiente) |
+| 8 | **Agenda + panelistas** | `events.agenda` (jsonb) → sección en `/e/<slug>` + link en mails | ✅ código (deploy pendiente) |
+| 9 | Certificados PDF | pdf-lib post-evento | 🔜 futuro |
 
 ---
 

@@ -4,6 +4,7 @@ import { MeshBg } from "@/components/mesh-bg";
 import { RegisterForm } from "@/components/register-form";
 import logo from "@/Logo/hackia_primary_dark.svg";
 import { getEventBySlug } from "@/lib/events";
+import { formatEventDateRange } from "@/lib/format-date";
 
 // Página pública del evento (#13). Server Component: lee el evento y muestra el form.
 export default async function EventPage({
@@ -15,37 +16,8 @@ export default async function EventPage({
 	const event = await getEventBySlug(slug);
 	if (!event) notFound();
 
-	// Formatear rango de fechas (ej: miércoles, 22 de julio 8:30 - 13:00)
-	let dateStr = "";
-	if (event.event_date) {
-		const startDate = new Date(event.event_date);
-		dateStr = startDate.toLocaleDateString("es-PE", {
-			weekday: "long",
-			month: "long",
-			day: "numeric",
-			hour: "2-digit",
-			minute: "2-digit",
-		});
-
-		if (event.end_date) {
-			const endDate = new Date(event.end_date);
-			// Si es el mismo día, solo añadimos la hora de fin. Si es distinto, añadimos todo.
-			if (startDate.toLocaleDateString() === endDate.toLocaleDateString()) {
-				dateStr += ` - ${endDate.toLocaleTimeString("es-PE", {
-					hour: "2-digit",
-					minute: "2-digit",
-				})}`;
-			} else {
-				dateStr += ` hasta ${endDate.toLocaleDateString("es-PE", {
-					weekday: "long",
-					month: "long",
-					day: "numeric",
-					hour: "2-digit",
-					minute: "2-digit",
-				})}`;
-			}
-		}
-	}
+	// Rango de fechas en hora de Lima (ver lib/format-date: el server corre en UTC).
+	const dateStr = formatEventDateRange(event.event_date, event.end_date);
 
 	// Mapa embebido sin API key: query por el nombre del lugar (clickable, "ver mapa más grande").
 	const mapEmbed = event.location
@@ -116,6 +88,47 @@ export default async function EventPage({
 						<p className="mb-1 font-semibold text-white/90">ℹ️ Instrucciones</p>
 						{event.instructions}
 					</div>
+				)}
+
+				{/* Agenda: paneles + panelistas (Bloque C). Solo se muestra si hay data. */}
+				{event.agenda && event.agenda.length > 0 && (
+					<section
+						id="agenda"
+						className="scroll-mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+					>
+						<h2 className="mb-4 text-lg font-bold">Agenda</h2>
+						<ul className="flex flex-col gap-4">
+							{event.agenda.map((item) => (
+								<li
+									key={`${item.time}-${item.title}`}
+									className="flex items-start gap-3"
+								>
+									<span className="w-14 shrink-0 text-sm font-semibold text-[#00cfaa]">
+										{item.time}
+									</span>
+									{item.photo_url && (
+										// biome-ignore lint/performance/noImgElement: foto remota de panelista (Storage)
+										<img
+											src={item.photo_url}
+											alt={item.speaker ?? ""}
+											className="h-10 w-10 shrink-0 rounded-full object-cover"
+										/>
+									)}
+									<div className="min-w-0">
+										<p className="text-sm font-medium text-white/90">
+											{item.title}
+										</p>
+										{item.speaker && (
+											<p className="text-xs text-white/50">
+												{item.speaker}
+												{item.role ? ` · ${item.role}` : ""}
+											</p>
+										)}
+									</div>
+								</li>
+							))}
+						</ul>
+					</section>
 				)}
 
 				{/* Card del formulario */}

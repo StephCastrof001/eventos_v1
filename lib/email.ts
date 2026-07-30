@@ -4,6 +4,8 @@ import {
 	buildApprovalEmail,
 	buildBadgeReadyEmail,
 	buildPendingEmail,
+	buildReminderEmail,
+	type ReminderEmailInput,
 } from "./email-template";
 
 /**
@@ -57,6 +59,36 @@ export async function sendBadgeReadyEmail(
 		const { data, error } = await resend.emails.send({
 			from: env.EMAIL_FROM,
 			to: [email],
+			replyTo: "steph@klipso.lat",
+			subject,
+			html,
+		});
+
+		if (error) {
+			return { ok: false, error: error.message };
+		}
+		return { ok: true, id: data?.id };
+	} catch (e) {
+		return { ok: false, error: e instanceof Error ? e.message : String(e) };
+	}
+}
+
+/**
+ * Envía un recordatorio del evento (10/5/1 días antes, Bloque B).
+ * `to` puede ser el invitado real o un correo de prueba (modo dry-run del cron).
+ */
+export async function sendReminderEmail(
+	to: string,
+	input: ReminderEmailInput,
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+	try {
+		const env = getEnv();
+		const resend = new Resend(env.RESEND_API_KEY);
+		const { subject, html } = buildReminderEmail(input);
+
+		const { data, error } = await resend.emails.send({
+			from: env.EMAIL_FROM,
+			to: [to],
 			replyTo: "steph@klipso.lat",
 			subject,
 			html,
