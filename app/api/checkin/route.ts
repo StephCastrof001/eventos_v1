@@ -68,15 +68,31 @@ export async function POST(req: Request) {
 			);
 		}
 
-		// Transición de estado permitida, actualizamos en DB
-		const { error: updateError } = await sb
+		// Transición permitida. Guardamos status + hora de ingreso (dato del día D,
+		// base de la vista no-show #28). El .eq("status", guest.status) es un
+		// optimistic lock: si otra caja de staff escaneó el mismo QR entre el fetch
+		// y el update, esa fila ya no está en el estado esperado → 0 filas → 409.
+		const { data: updated, error: updateError } = await sb
 			.from("guests")
-			.update({ status: decision.next })
+			.update({
+				status: decision.next,
+				checked_in_at: new Date().toISOString(),
+			})
 			.eq("id", guest.id)
-			.eq("event_id", eventId);
+			.eq("event_id", eventId)
+			.eq("status", guest.status)
+			.select("id");
 
 		if (updateError) {
 			throw updateError;
+		}
+
+		// Carrera perdida: otra caja ganó el check-in. Tratar como duplicado.
+		if (!updated || updated.length === 0) {
+			return NextResponse.json(
+				{ ok: false, reason: "already_checked_in" },
+				{ status: 409 },
+			);
 		}
 
 		return NextResponse.json(

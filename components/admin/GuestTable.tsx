@@ -1,11 +1,22 @@
-import React from "react";
 import { approveGuest, rejectGuest } from "@/app/admin/actions";
+
+/** Fila de invitado que la tabla del admin necesita mostrar. */
+interface GuestRow {
+	id: string;
+	name: string;
+	last_name?: string | null;
+	email: string;
+	phone?: string | null;
+	company?: string | null;
+	role?: string | null;
+	status: string;
+}
 
 export function GuestTable({
 	guests,
 	eventId,
 }: {
-	guests: any[];
+	guests: GuestRow[];
 	eventId: string;
 }) {
 	return (
