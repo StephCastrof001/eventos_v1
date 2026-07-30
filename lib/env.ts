@@ -13,6 +13,10 @@ const envSchema = z.object({
 	NEXT_PUBLIC_APP_URL: z.string().url(),
 	// Allowlist de admins (emails separados por coma). Gate de autorización del dashboard.
 	ADMIN_EMAILS: z.string().min(1),
+	// Secreto del cron de recordatorios (Bloque B). Vercel Cron lo manda como Bearer.
+	CRON_SECRET: z.string().min(1).optional(),
+	// Offsets de recordatorio en días, ej "10,5,1". Si falta → default en lib/reminders.
+	REMINDER_OFFSETS: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
