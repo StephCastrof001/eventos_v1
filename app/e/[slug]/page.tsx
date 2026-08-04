@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { EventAgenda } from "@/components/event/EventAgenda";
 import { EventHeader } from "@/components/event/EventHeader";
 import { EventLocation } from "@/components/event/EventLocation";
 import { MeshBg } from "@/components/mesh-bg";
@@ -7,8 +6,8 @@ import { RegisterForm } from "@/components/register-form";
 import { getEventBySlug } from "@/lib/events";
 
 // Página pública del evento (#13). Server Component: lee el evento y muestra el form.
-// La cabecera, el lugar y la agenda salen de components/event/*, compartidos con
-// /e/[slug]/agenda (la versión sin formulario que linkean los recordatorios).
+// La cabecera y el lugar salen de components/event/*, compartidos con
+// /e/[slug]/agenda (la página que linkean los recordatorios y sí muestra la agenda).
 export default async function EventPage({
 	params,
 }: {
@@ -31,8 +30,6 @@ export default async function EventPage({
 						{event.instructions}
 					</div>
 				)}
-
-				<EventAgenda agenda={event.agenda} />
 
 				{/* Card del formulario */}
 				<section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-sm">
