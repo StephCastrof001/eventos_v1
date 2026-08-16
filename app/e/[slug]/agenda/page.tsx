@@ -30,7 +30,6 @@ export default async function EventAgendaPage({
 			<MeshBg />
 			<main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center gap-6 px-5 py-12 text-[#e8e8f0]">
 				<EventHeader event={event} />
-				<EventLocation event={event} />
 
 				{event.instructions && (
 					<div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-relaxed text-white/75">
@@ -46,6 +45,9 @@ export default async function EventAgendaPage({
 						La agenda se publica pronto. Volvé a entrar en unos días.
 					</section>
 				)}
+
+				{/* La dirección va al final: primero el porqué (ponentes), después el dónde. */}
+				<EventLocation event={event} />
 
 				{/* Salida hacia la inscripción para quien todavía no se anotó. */}
 				<p className="text-center text-sm text-white/50">
