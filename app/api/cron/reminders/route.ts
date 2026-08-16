@@ -34,6 +34,7 @@ interface EventContext {
 	appUrl: string;
 	location?: string | null;
 	locationUrl?: string | null;
+	instructions?: string | null;
 }
 
 /** Arma el input del email para un invitado. El CTA de badge solo si aún no lo hizo. */
@@ -50,6 +51,7 @@ function buildInput(
 		agendaUrl: ctx.agendaUrl,
 		location: ctx.location,
 		locationUrl: ctx.locationUrl,
+		instructions: ctx.instructions,
 		badgeUrl: needsBadge ? buildMagicUrl(ctx.appUrl, guest.magic_token) : null,
 	};
 }
@@ -93,7 +95,9 @@ export async function GET(req: Request) {
 	// Eventos futuros con fecha
 	const { data: events, error: evErr } = await sb
 		.from("events")
-		.select("id, slug, name, event_date, end_date, location, location_url")
+		.select(
+			"id, slug, name, event_date, end_date, location, location_url, instructions",
+		)
 		.not("event_date", "is", null)
 		.gte("event_date", now.toISOString());
 	if (evErr) {
@@ -128,6 +132,7 @@ export async function GET(req: Request) {
 			appUrl,
 			location: ev.location,
 			locationUrl: ev.location_url,
+			instructions: ev.instructions,
 		};
 
 		// Candidatos: aprobados o con badge, no check-in / rechazados (filtrado por status).

@@ -47,28 +47,74 @@ const BASE_REMINDER = {
 } as const;
 
 describe("buildReminderEmail", () => {
-	it("subject empieza con 'Mañana:' cuando daysBefore=1", () => {
-		const { subject } = buildReminderEmail({ ...BASE_REMINDER, daysBefore: 1 });
-		expect(subject).toMatch(/^Mañana:/);
-	});
-
-	it("subject contiene 'Faltan 5 días' cuando daysBefore=5", () => {
-		const { subject } = buildReminderEmail({ ...BASE_REMINDER, daysBefore: 5 });
-		expect(subject).toContain("Faltan 5 días");
-	});
-
-	it("subject contiene 'Faltan 10 días' cuando daysBefore=10", () => {
-		const { subject } = buildReminderEmail({
+	it("la víspera usa su propio subject y título", () => {
+		const { subject, html } = buildReminderEmail({
 			...BASE_REMINDER,
-			daysBefore: 10,
+			daysBefore: 1,
 		});
-		expect(subject).toContain("Faltan 10 días");
+		expect(subject).toBe("Mañana nos vemos — HACK IA Summit");
+		expect(html).toContain("¡Mañana nos vemos!");
+		expect(html).toContain("Es mañana.");
 	});
 
-	it("html contiene el agendaUrl y el texto 'Ver agenda'", () => {
+	it("los días previos comparten subject y título de antesala", () => {
+		for (const daysBefore of [2, 5, 10]) {
+			const { subject, html } = buildReminderEmail({
+				...BASE_REMINDER,
+				daysBefore,
+			});
+			expect(subject).toBe("Nos vemos en el HACK IA Summit");
+			expect(html).toContain("Nos vemos muy pronto");
+			expect(html).toContain("a solo unos días");
+		}
+	});
+
+	it("html contiene el agendaUrl y el CTA de ponentes", () => {
 		const { html } = buildReminderEmail({ ...BASE_REMINDER, daysBefore: 5 });
 		expect(html).toContain("https://hackia.com/agenda");
-		expect(html).toContain("Ver agenda");
+		expect(html).toContain("Ver ponentes y agenda");
+	});
+
+	it("cierra con la firma de la comunidad", () => {
+		const { html } = buildReminderEmail({ ...BASE_REMINDER, daysBefore: 5 });
+		expect(html).toContain("¡Nos vemos muy pronto!");
+		expect(html).toContain("Con cariño");
+	});
+
+	it("normaliza nombres gritados pero respeta los de mayúscula mezclada", () => {
+		const gritado = buildReminderEmail({
+			...BASE_REMINDER,
+			name: "STEPHANIE",
+			daysBefore: 2,
+		});
+		expect(gritado.html).toContain("Stephanie");
+		expect(gritado.html).not.toContain("STEPHANIE");
+
+		const mezclado = buildReminderEmail({
+			...BASE_REMINDER,
+			name: "Ana de la Cruz",
+			daysBefore: 2,
+		});
+		expect(mezclado.html).toContain("Ana de la Cruz");
+	});
+
+	it("renderiza instructions como una línea por renglón", () => {
+		const { html } = buildReminderEmail({
+			...BASE_REMINDER,
+			daysBefore: 2,
+			instructions: "Check-in 6:30 p.m.\nSin estacionamiento",
+		});
+		expect(html).toContain("Check-in 6:30 p.m.");
+		expect(html).toContain("Sin estacionamiento");
+	});
+
+	it("omite el bloque de instructions cuando no hay data", () => {
+		const { html } = buildReminderEmail({
+			...BASE_REMINDER,
+			daysBefore: 2,
+			instructions: "   ",
+		});
+		expect(html).not.toContain("border-top:1px solid #2a2a3a");
 	});
 
 	it("html contiene el nombre del invitado", () => {

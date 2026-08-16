@@ -5,6 +5,23 @@ export interface ApprovalEmailInput {
 	magicUrl: string;
 }
 
+/**
+ * Normaliza nombres gritados o en minúsculas que vienen del formulario:
+ * "STEPHANIE" → "Stephanie", "jose perez" → "Jose Perez". Un nombre con
+ * mayúsculas mezcladas ("McDonald", "de la Cruz") se deja intacto: ahí el
+ * usuario ya eligió cómo escribirlo.
+ */
+function normalizeName(name: string): string {
+	const mixed = name !== name.toUpperCase() && name !== name.toLowerCase();
+	if (mixed) return name;
+	return name
+		.toLowerCase()
+		.replace(
+			/(^|[\s'-])(\p{L})/gu,
+			(_, sep, letter) => sep + letter.toUpperCase(),
+		);
+}
+
 function escapeHtml(unsafe: string): string {
 	return unsafe
 		.replace(/&/g, "&amp;")
@@ -192,6 +209,12 @@ export interface ReminderEmailInput {
 	location?: string | null;
 	/** Link al pin en Maps; si viene, la dirección se vuelve clickeable. */
 	locationUrl?: string | null;
+	/**
+	 * Logística del evento (check-in, puntualidad, estacionamiento), una línea
+	 * por dato. Viene de `events.instructions`: es data, no copy hardcodeado,
+	 * así cada evento pone la suya y se edita sin deploy.
+	 */
+	instructions?: string | null;
 }
 
 /**
@@ -202,7 +225,7 @@ export function buildReminderEmail(input: ReminderEmailInput): {
 	subject: string;
 	html: string;
 } {
-	const safeName = escapeHtml(input.name);
+	const safeName = escapeHtml(normalizeName(input.name));
 	const safeEventName = escapeHtml(input.eventName);
 	const safeDateStr = escapeHtml(input.dateStr);
 
@@ -212,35 +235,60 @@ export function buildReminderEmail(input: ReminderEmailInput): {
 	}
 	const safeAgendaUrl = escapeHtml(parsedAgenda.toString());
 
-	const subject =
-		input.daysBefore === 1
-			? `Mañana: ${input.eventName}`
-			: `Faltan ${input.daysBefore} días — ${input.eventName}`;
-
-	const urgencia =
-		input.daysBefore === 1
-			? "¡Nos vemos mañana! 🚀"
-			: `Faltan ${input.daysBefore} días 📅`;
+	// La víspera merece su propio tono; el resto comparte el "faltan pocos días".
+	const esVispera = input.daysBefore === 1;
+	const subject = esVispera
+		? `Mañana nos vemos — ${input.eventName}`
+		: `Nos vemos en el ${input.eventName}`;
+	const titulo = esVispera
+		? "¡Mañana nos vemos! 🚀"
+		: "Nos vemos muy pronto 🚀";
+	const intro = esVispera
+		? "Es mañana. Queremos que tengas todo listo para disfrutar al máximo esta experiencia."
+		: "Estamos a solo unos días de vivir esta experiencia y queremos que llegues con todo listo.";
 
 	const badgeCtaHtml = buildBadgeCta(input.badgeUrl);
 	const locationHtml = buildLocationRow(input.location, input.locationUrl);
+	const instructionsHtml = buildInstructionsRows(input.instructions);
 
 	const body = `
-    <h1 style="margin:0 0 16px 0; font-size:24px; color:#e8e8f0;">${urgencia}</h1>
-    <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Hola <strong style="color:#e8e8f0;">${safeName}</strong>,</p>
-    <p style="margin:0 0 4px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Te recordamos que <strong style="color:#e8e8f0;">${safeEventName}</strong> es pronto. ¡No te lo pierdas!</p>
+    <h1 style="margin:0 0 16px 0; font-size:24px; color:#e8e8f0;">${titulo}</h1>
+    <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">¡Hola <strong style="color:#e8e8f0;">${safeName}</strong>!</p>
+    <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">${intro}</p>
+    <p style="margin:0 0 4px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Estos son los detalles más importantes para tu asistencia:</p>
     <div style="margin:20px 0; padding:16px; background-color:#0c0c14; border:1px solid #2a2a3a; border-radius:10px; text-align:left;">
-      <p style="margin:0; font-size:14px; color:#c9c9d6;">🗓️ <strong style="color:#e8e8f0;">${safeDateStr}</strong></p>${locationHtml}
+      <p style="margin:0; font-size:14px; color:#c9c9d6;">🗓️ <strong style="color:#e8e8f0;">${safeDateStr}</strong></p>${locationHtml}${instructionsHtml}
     </div>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#6f5ff2;">
-      <a href="${safeAgendaUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver agenda →</a>
+      <a href="${safeAgendaUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver ponentes y agenda →</a>
     </td></tr></table>
-    ${badgeCtaHtml}`;
+    ${badgeCtaHtml}
+    <p style="margin:28px 0 0 0; font-size:15px; line-height:1.6; color:#c9c9d6;">¡Nos vemos muy pronto!</p>
+    <p style="margin:4px 0 0 0; font-size:15px; line-height:1.6; color:#9a9ab0;">Con cariño,<br><strong style="color:#e8e8f0;">Comunidad HACK IA</strong></p>`;
 
 	return {
 		subject,
-		html: emailShell(`${urgencia} — ${input.eventName}`, body),
+		html: emailShell(`${intro} ${safeEventName}`, body),
 	};
+}
+
+/**
+ * Renderiza `events.instructions` dentro de la caja de detalles: una línea por
+ * renglón del texto. Se separa del bloque fecha/dirección con un filete para
+ * que la logística no se confunda con el cuándo y el dónde.
+ */
+function buildInstructionsRows(instructions?: string | null): string {
+	if (!instructions?.trim()) return "";
+	const lineas = instructions
+		.split("\n")
+		.map((l) => l.trim())
+		.filter(Boolean)
+		.map(
+			(l) =>
+				`<p style="margin:6px 0 0 0; font-size:14px; line-height:1.5; color:#c9c9d6;">${escapeHtml(l)}</p>`,
+		)
+		.join("");
+	return `<div style="margin:12px 0 0 0; padding:12px 0 0 0; border-top:1px solid #2a2a3a;">${lineas}</div>`;
 }
 
 /**
