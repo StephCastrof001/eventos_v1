@@ -38,12 +38,11 @@ interface EventContext {
 	community?: ReminderEmailInput["community"];
 }
 
-/** Arma el input del email para un invitado. El CTA de badge solo si aún no lo hizo. */
+/** Arma el input del email para un invitado. */
 function buildInput(
 	guest: ReminderGuest,
 	ctx: EventContext,
 ): ReminderEmailInput {
-	const needsBadge = guest.status === "approved"; // approved = sin foto/badge todavía
 	return {
 		name: guest.name,
 		eventName: ctx.eventName,
@@ -54,7 +53,9 @@ function buildInput(
 		locationUrl: ctx.locationUrl,
 		instructions: ctx.instructions,
 		community: ctx.community,
-		badgeUrl: needsBadge ? buildMagicUrl(ctx.appUrl, guest.magic_token) : null,
+		// El QR de entrada va a todos: approved lo ve suelto y badge_ready lo ve
+		// dentro del badge. La foto es opcional, la entrada no.
+		entradaUrl: buildMagicUrl(ctx.appUrl, guest.magic_token),
 	};
 }
 

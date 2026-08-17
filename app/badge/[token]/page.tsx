@@ -76,7 +76,7 @@ export default async function BadgePage({
 						<p className="font-semibold text-[#00cfaa]">
 							Tu badge está listo 🎫
 						</p>
-						{/* Badge real (con QR) — lo que mostrás en la puerta */}
+						{/* Badge real (con QR) — lo que muestras en la puerta */}
 						{/* biome-ignore lint/performance/noImgElement: PNG dinámico de satori */}
 						<img
 							src={`/api/badge/${token}`}
@@ -91,7 +91,7 @@ export default async function BadgePage({
 							Descargar para compartir
 						</a>
 						<p className="text-xs leading-relaxed text-white/50">
-							El QR es solo para la puerta. La versión que descargás para redes
+							El QR es solo para la puerta. La versión que descargas para redes
 							va sin QR.
 						</p>
 					</section>

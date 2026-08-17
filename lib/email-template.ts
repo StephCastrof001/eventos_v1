@@ -203,8 +203,11 @@ export interface ReminderEmailInput {
 	daysBefore: number;
 	/** URL a la agenda del evento; genera el botón "Ver agenda". */
 	agendaUrl: string;
-	/** Si viene, incluye CTA "Haz tu credencial"; si null/undefined, omite el bloque. */
-	badgeUrl?: string | null;
+	/**
+	 * Link a la entrada del invitado (`/badge/{magic_token}`), donde está su QR.
+	 * Es lo unico que necesita para pasar la puerta. Si no viene, se omite.
+	 */
+	entradaUrl?: string | null;
 	/** Dirección del evento. Un recordatorio sin el "dónde" obliga a buscarlo aparte. */
 	location?: string | null;
 	/** Link al pin en Maps; si viene, la dirección se vuelve clickeable. */
@@ -257,7 +260,7 @@ export function buildReminderEmail(input: ReminderEmailInput): {
 		? "Es mañana. Queremos que tengas todo listo para disfrutar al máximo esta experiencia."
 		: "Estamos a solo unos días de vivir esta experiencia y queremos que llegues con todo listo.";
 
-	const badgeCtaHtml = buildBadgeCta(input.badgeUrl);
+	const entradaCtaHtml = buildEntradaCta(input.entradaUrl);
 	const locationHtml = buildLocationRow(input.location, input.locationUrl);
 	const instructionsHtml = buildInstructionsRows(input.instructions);
 
@@ -272,7 +275,7 @@ export function buildReminderEmail(input: ReminderEmailInput): {
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#6f5ff2;">
       <a href="${safeAgendaUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver ponentes y agenda →</a>
     </td></tr></table>
-    ${badgeCtaHtml}
+    ${entradaCtaHtml}
     ${buildCommunityBlock(input.community)}
     <p style="margin:28px 0 0 0; font-size:15px; line-height:1.6; color:#c9c9d6;">¡Nos vemos muy pronto!</p>
     <p style="margin:4px 0 0 0; font-size:15px; line-height:1.6; color:#9a9ab0;">Con cariño,<br><strong style="color:#e8e8f0;">Comunidad HACK IA</strong></p>`;
@@ -380,21 +383,22 @@ function buildLocationRow(
 }
 
 /**
- * Construye el bloque HTML del CTA de credencial si badgeUrl es válida.
- * Retorna cadena vacía si badgeUrl es null/undefined.
+ * CTA a la entrada del invitado. Va a todos los que reciben recordatorio, no
+ * solo a los que aun no subieron foto: el QR es el requisito para entrar y la
+ * foto es opcional. Retorna cadena vacia si no hay URL.
  */
-function buildBadgeCta(badgeUrl: string | null | undefined): string {
-	if (badgeUrl == null) return "";
+function buildEntradaCta(entradaUrl: string | null | undefined): string {
+	if (entradaUrl == null) return "";
 
-	const parsed = new URL(badgeUrl);
+	const parsed = new URL(entradaUrl);
 	if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-		throw new Error("badgeUrl: esquema no permitido");
+		throw new Error("entradaUrl: esquema no permitido");
 	}
 	const safeUrl = escapeHtml(parsed.toString());
 
 	return `
-    <p style="margin:20px 0 8px 0; font-size:14px; line-height:1.6; color:#c9c9d6;">¿Aún no tienes tu credencial? Créala antes del evento:</p>
+    <p style="margin:20px 0 8px 0; font-size:14px; line-height:1.6; color:#c9c9d6;">Este es tu QR de entrada. Muéstralo en la puerta para tu ingreso:</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#00cfaa;">
-      <a href="${safeUrl}" style="display:inline-block; padding:12px 24px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#0c0c14; text-decoration:none; border-radius:10px;">Haz tu credencial →</a>
+      <a href="${safeUrl}" style="display:inline-block; padding:12px 24px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#0c0c14; text-decoration:none; border-radius:10px;">🎫 Ver mi QR de entrada →</a>
     </td></tr></table>`;
 }

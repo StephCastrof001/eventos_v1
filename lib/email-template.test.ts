@@ -162,28 +162,26 @@ describe("buildReminderEmail", () => {
 		expect(html).toContain("miércoles 19 de agosto, 19:00 - 21:00");
 	});
 
-	it("con badgeUrl presente → html contiene 'Haz tu credencial' y el badgeUrl", () => {
+	it("con entradaUrl → CTA del QR de entrada, sin hablar de credencial", () => {
 		const { html } = buildReminderEmail({
 			...BASE_REMINDER,
 			daysBefore: 5,
-			badgeUrl: "https://hackia.com/badge/abc",
+			entradaUrl: "https://hackia.com/badge/abc",
 		});
-		expect(html).toContain("Haz tu credencial");
+		expect(html).toContain("Ver mi QR de entrada");
 		expect(html).toContain("https://hackia.com/badge/abc");
+		expect(html).not.toContain("credencial");
 	});
 
-	it("con badgeUrl null → html NO contiene 'Haz tu credencial'", () => {
-		const { html } = buildReminderEmail({
-			...BASE_REMINDER,
-			daysBefore: 5,
-			badgeUrl: null,
-		});
-		expect(html).not.toContain("Haz tu credencial");
-	});
-
-	it("con badgeUrl undefined → html NO contiene 'Haz tu credencial'", () => {
-		const { html } = buildReminderEmail({ ...BASE_REMINDER, daysBefore: 5 });
-		expect(html).not.toContain("Haz tu credencial");
+	it("sin entradaUrl → omite el bloque", () => {
+		for (const entradaUrl of [null, undefined]) {
+			const { html } = buildReminderEmail({
+				...BASE_REMINDER,
+				daysBefore: 5,
+				entradaUrl,
+			});
+			expect(html).not.toContain("Ver mi QR de entrada");
+		}
 	});
 
 	it("agendaUrl con esquema no http → lanza Error", () => {
@@ -196,12 +194,12 @@ describe("buildReminderEmail", () => {
 		).toThrow();
 	});
 
-	it("badgeUrl con esquema no http → lanza Error", () => {
+	it("entradaUrl con esquema no http → lanza Error", () => {
 		expect(() =>
 			buildReminderEmail({
 				...BASE_REMINDER,
 				daysBefore: 5,
-				badgeUrl: "javascript:xss()",
+				entradaUrl: "javascript:xss()",
 			}),
 		).toThrow();
 	});
