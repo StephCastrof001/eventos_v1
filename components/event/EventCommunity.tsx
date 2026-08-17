@@ -44,7 +44,7 @@ export function canalesDe(brand?: EventBrand | null): Canal[] {
 	if (grupo)
 		canales.push({
 			label: "Grupo de WhatsApp",
-			handle: "Sumate a la comunidad",
+			handle: "Únete a la comunidad",
 			url: grupo,
 			emoji: "💬",
 		});
@@ -100,7 +100,7 @@ export async function EventCommunity({ brand }: { brand?: EventBrand | null }) {
 		<section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
 			<h2 className="mb-1 text-lg font-bold">Conecta con HACK IA</h2>
 			<p className="mb-4 text-sm text-white/50">
-				Escaneá el código o tocá el enlace.
+				Escanea el código o toca el enlace.
 			</p>
 			<ul className="flex flex-col gap-4">
 				{conQr.map((c) => (

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EventAgenda } from "@/components/event/EventAgenda";
 import { EventCommunity } from "@/components/event/EventCommunity";
@@ -8,9 +7,10 @@ import { MeshBg } from "@/components/mesh-bg";
 import { getEventBySlug } from "@/lib/events";
 
 /**
- * Página de agenda del evento: fecha, lugar y paneles, SIN el formulario de
- * inscripción. Es el destino del botón "Ver agenda" de los recordatorios, para
- * que un invitado ya aprobado no aterrice en un "Solicitar unirse" que ya hizo.
+ * Página de agenda del evento: ponentes, lugar y canales de la comunidad.
+ * Es el destino del CTA de los recordatorios, que van solo a invitados ya
+ * aprobados: por eso no hay formulario ni salida hacia "Solicitar unirse".
+ * Quien llega acá ya está dentro; ofrecerle inscribirse lo confunde.
  *
  * Lee el mismo events.<slug> que /e/[slug]: una sola fuente de verdad, así la
  * agenda nunca queda desincronizada entre las dos páginas.
@@ -51,17 +51,6 @@ export default async function EventAgendaPage({
 				<EventLocation event={event} />
 
 				<EventCommunity brand={event.brand} />
-
-				{/* Salida hacia la inscripción para quien todavía no se anotó. */}
-				<p className="text-center text-sm text-white/50">
-					¿Todavía no te inscribiste?{" "}
-					<Link
-						href={`/e/${slug}`}
-						className="font-medium text-[#00cfaa] hover:underline"
-					>
-						Solicitar unirse →
-					</Link>
-				</p>
 			</main>
 		</>
 	);

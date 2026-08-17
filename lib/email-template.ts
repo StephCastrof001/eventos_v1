@@ -311,9 +311,9 @@ function buildCommunityBlock(
 
 	const grupoHtml = grupo
 		? `
-    <p style="margin:0 0 10px 0; font-size:14px; line-height:1.6; color:#c9c9d6;">Sumate a la comunidad y enterate de todo antes que nadie:</p>
+    <p style="margin:0 0 10px 0; font-size:14px; line-height:1.6; color:#c9c9d6;">Únete a la comunidad y entérate de todo antes que nadie:</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#25D366;">
-      <a href="${grupo}" style="display:inline-block; padding:12px 24px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#0c0c14; text-decoration:none; border-radius:10px;">💬 Unirme al grupo →</a>
+      <a href="${grupo}" style="display:inline-block; padding:12px 24px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#0c0c14; text-decoration:none; border-radius:10px;">💬 Unirme al grupo de WhatsApp →</a>
     </td></tr></table>`
 		: "";
 
