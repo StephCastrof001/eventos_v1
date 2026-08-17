@@ -329,7 +329,7 @@ function buildCommunityBlock(
 			: null,
 	].filter(Boolean);
 	const redesHtml = redes.length
-		? `<p style="margin:14px 0 0 0; font-size:13px; color:#6b6b80; text-align:center;">${redes.join(' <span style="color:#2a2a3a;">·</span> ')}</p>`
+		? `<p style="margin:16px 0 0 0; font-size:13px; line-height:1.6; color:#6b6b80; text-align:center;">Síguenos en nuestras redes<br>${redes.join(' <span style="color:#2a2a3a;">·</span> ')}</p>`
 		: "";
 
 	return `<div style="margin:24px 0 0 0; padding:20px 0 0 0; border-top:1px solid #2a2a3a; text-align:center;">${grupoHtml}${redesHtml}</div>`;

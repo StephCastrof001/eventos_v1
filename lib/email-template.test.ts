@@ -120,6 +120,7 @@ describe("buildReminderEmail", () => {
 		});
 		expect(html).toContain("https://chat.whatsapp.com/ABC123");
 		expect(html).toContain("Unirme al grupo");
+		expect(html).toContain("Síguenos en nuestras redes");
 		expect(html).toContain("Instagram");
 		expect(html).toContain("LinkedIn");
 	});
