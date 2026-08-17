@@ -215,6 +215,16 @@ export interface ReminderEmailInput {
 	 * así cada evento pone la suya y se edita sin deploy.
 	 */
 	instructions?: string | null;
+	/**
+	 * Canales de la comunidad (`events.brand`). En el mail van como links, no
+	 * como QR: el QR se leería desde el mismo celular que abre el correo, y los
+	 * clientes bloquean imágenes. Los QR viven en la página de agenda.
+	 */
+	community?: {
+		whatsapp_group?: string | null;
+		instagram?: string | null;
+		linkedin?: string | null;
+	} | null;
 }
 
 /**
@@ -263,6 +273,7 @@ export function buildReminderEmail(input: ReminderEmailInput): {
       <a href="${safeAgendaUrl}" style="display:inline-block; padding:14px 28px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:10px;">Ver ponentes y agenda →</a>
     </td></tr></table>
     ${badgeCtaHtml}
+    ${buildCommunityBlock(input.community)}
     <p style="margin:28px 0 0 0; font-size:15px; line-height:1.6; color:#c9c9d6;">¡Nos vemos muy pronto!</p>
     <p style="margin:4px 0 0 0; font-size:15px; line-height:1.6; color:#9a9ab0;">Con cariño,<br><strong style="color:#e8e8f0;">Comunidad HACK IA</strong></p>`;
 
@@ -270,6 +281,55 @@ export function buildReminderEmail(input: ReminderEmailInput): {
 		subject,
 		html: emailShell(`${intro} ${safeEventName}`, body),
 	};
+}
+
+/** URL segura para atributo href, o null si el esquema no es http/https. */
+function safeHref(url?: string | null): string | null {
+	if (!url) return null;
+	try {
+		const parsed = new URL(url);
+		if (parsed.protocol !== "https:" && parsed.protocol !== "http:")
+			return null;
+		return escapeHtml(parsed.toString());
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Bloque de comunidad al pie del recordatorio. El grupo de WhatsApp es la
+ * acción con más peso (botón); Instagram y LinkedIn quedan como links chicos
+ * para no competir con el CTA principal de la agenda.
+ */
+function buildCommunityBlock(
+	community: ReminderEmailInput["community"],
+): string {
+	const grupo = safeHref(community?.whatsapp_group);
+	const ig = safeHref(community?.instagram);
+	const li = safeHref(community?.linkedin);
+	if (!grupo && !ig && !li) return "";
+
+	const grupoHtml = grupo
+		? `
+    <p style="margin:0 0 10px 0; font-size:14px; line-height:1.6; color:#c9c9d6;">Sumate a la comunidad y enterate de todo antes que nadie:</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="border-radius:10px; background-color:#25D366;">
+      <a href="${grupo}" style="display:inline-block; padding:12px 24px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#0c0c14; text-decoration:none; border-radius:10px;">💬 Unirme al grupo →</a>
+    </td></tr></table>`
+		: "";
+
+	const redes = [
+		ig
+			? `<a href="${ig}" style="color:#9a9ab0; text-decoration:none;">Instagram</a>`
+			: null,
+		li
+			? `<a href="${li}" style="color:#9a9ab0; text-decoration:none;">LinkedIn</a>`
+			: null,
+	].filter(Boolean);
+	const redesHtml = redes.length
+		? `<p style="margin:14px 0 0 0; font-size:13px; color:#6b6b80; text-align:center;">${redes.join(' <span style="color:#2a2a3a;">·</span> ')}</p>`
+		: "";
+
+	return `<div style="margin:24px 0 0 0; padding:20px 0 0 0; border-top:1px solid #2a2a3a; text-align:center;">${grupoHtml}${redesHtml}</div>`;
 }
 
 /**

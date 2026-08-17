@@ -17,6 +17,17 @@ export interface AgendaItem {
 	photo_url?: string | null;
 }
 
+/**
+ * Canales de la comunidad organizadora. Viven en `events.brand` (JSONB) para
+ * que cada evento traiga los suyos sin tocar código. Todos opcionales: un
+ * evento sin redes simplemente no muestra el bloque.
+ */
+export interface EventBrand {
+	whatsapp_group?: string | null;
+	instagram?: string | null;
+	linkedin?: string | null;
+}
+
 /** Evento (datos públicos). */
 export interface EventRow {
 	id: string;
@@ -30,6 +41,7 @@ export interface EventRow {
 	instructions?: string | null;
 	description?: string | null;
 	organizer?: string | null;
+	brand?: EventBrand | null;
 	agenda?: AgendaItem[];
 	form_fields: FormField[];
 }
@@ -39,7 +51,7 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 	let { data, error } = await sb
 		.from("events")
 		.select(
-			"id, slug, name, event_date, end_date, location_type, location, location_url, instructions, description, organizer, agenda, form_fields",
+			"id, slug, name, event_date, end_date, location_type, location, location_url, instructions, description, organizer, brand, agenda, form_fields",
 		)
 		.eq("slug", slug)
 		.maybeSingle();

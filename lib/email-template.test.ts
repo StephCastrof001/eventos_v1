@@ -108,6 +108,41 @@ describe("buildReminderEmail", () => {
 		expect(html).toContain("Sin estacionamiento");
 	});
 
+	it("incluye grupo de WhatsApp y redes cuando hay brand", () => {
+		const { html } = buildReminderEmail({
+			...BASE_REMINDER,
+			daysBefore: 2,
+			community: {
+				whatsapp_group: "https://chat.whatsapp.com/ABC123",
+				instagram: "https://www.instagram.com/hackia_community",
+				linkedin: "https://www.linkedin.com/company/hackia",
+			},
+		});
+		expect(html).toContain("https://chat.whatsapp.com/ABC123");
+		expect(html).toContain("Unirme al grupo");
+		expect(html).toContain("Instagram");
+		expect(html).toContain("LinkedIn");
+	});
+
+	it("omite el bloque de comunidad cuando no hay canales", () => {
+		const { html } = buildReminderEmail({ ...BASE_REMINDER, daysBefore: 2 });
+		expect(html).not.toContain("Unirme al grupo");
+	});
+
+	it("descarta canales con esquema no permitido sin romper el envío", () => {
+		const { html } = buildReminderEmail({
+			...BASE_REMINDER,
+			daysBefore: 2,
+			community: {
+				whatsapp_group: "javascript:alert(1)",
+				instagram: "https://www.instagram.com/hackia_community",
+			},
+		});
+		expect(html).not.toContain("javascript:");
+		expect(html).not.toContain("Unirme al grupo");
+		expect(html).toContain("Instagram");
+	});
+
 	it("omite el bloque de instructions cuando no hay data", () => {
 		const { html } = buildReminderEmail({
 			...BASE_REMINDER,

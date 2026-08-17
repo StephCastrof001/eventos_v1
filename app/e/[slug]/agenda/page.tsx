@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EventAgenda } from "@/components/event/EventAgenda";
+import { EventCommunity } from "@/components/event/EventCommunity";
 import { EventHeader } from "@/components/event/EventHeader";
 import { EventLocation } from "@/components/event/EventLocation";
 import { MeshBg } from "@/components/mesh-bg";
@@ -48,6 +49,8 @@ export default async function EventAgendaPage({
 
 				{/* La dirección va al final: primero el porqué (ponentes), después el dónde. */}
 				<EventLocation event={event} />
+
+				<EventCommunity brand={event.brand} />
 
 				{/* Salida hacia la inscripción para quien todavía no se anotó. */}
 				<p className="text-center text-sm text-white/50">

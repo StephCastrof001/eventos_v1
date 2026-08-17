@@ -35,6 +35,7 @@ interface EventContext {
 	location?: string | null;
 	locationUrl?: string | null;
 	instructions?: string | null;
+	community?: ReminderEmailInput["community"];
 }
 
 /** Arma el input del email para un invitado. El CTA de badge solo si aún no lo hizo. */
@@ -52,6 +53,7 @@ function buildInput(
 		location: ctx.location,
 		locationUrl: ctx.locationUrl,
 		instructions: ctx.instructions,
+		community: ctx.community,
 		badgeUrl: needsBadge ? buildMagicUrl(ctx.appUrl, guest.magic_token) : null,
 	};
 }
@@ -96,7 +98,7 @@ export async function GET(req: Request) {
 	const { data: events, error: evErr } = await sb
 		.from("events")
 		.select(
-			"id, slug, name, event_date, end_date, location, location_url, instructions",
+			"id, slug, name, event_date, end_date, location, location_url, instructions, brand",
 		)
 		.not("event_date", "is", null)
 		.gte("event_date", now.toISOString());
@@ -133,6 +135,7 @@ export async function GET(req: Request) {
 			location: ev.location,
 			locationUrl: ev.location_url,
 			instructions: ev.instructions,
+			community: ev.brand,
 		};
 
 		// Candidatos: aprobados o con badge, no check-in / rechazados (filtrado por status).
