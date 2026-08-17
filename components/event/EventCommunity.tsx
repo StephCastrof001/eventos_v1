@@ -18,30 +18,55 @@ interface Canal {
 	emoji: string;
 }
 
-function canalesDe(brand?: EventBrand | null): Canal[] {
+/**
+ * Solo http/https salen a un href o a un QR. `events.brand` hoy lo escribe un
+ * admin con service_role, pero el mismo allowlist ya vive en el template de
+ * email: dejar un camino sin validar invita a que un `javascript:` entre por
+ * acá el día que un formulario escriba ese campo. Un canal que no pasa se cae.
+ */
+function safeHttpUrl(url?: string | null): string | null {
+	if (!url) return null;
+	try {
+		const parsed = new URL(url);
+		if (parsed.protocol !== "https:" && parsed.protocol !== "http:")
+			return null;
+		return parsed.toString();
+	} catch {
+		return null;
+	}
+}
+
+export function canalesDe(brand?: EventBrand | null): Canal[] {
 	if (!brand) return [];
 	const canales: Canal[] = [];
-	if (brand.whatsapp_group)
+
+	const grupo = safeHttpUrl(brand.whatsapp_group);
+	if (grupo)
 		canales.push({
 			label: "Grupo de WhatsApp",
 			handle: "Sumate a la comunidad",
-			url: brand.whatsapp_group,
+			url: grupo,
 			emoji: "💬",
 		});
-	if (brand.instagram)
+
+	const ig = safeHttpUrl(brand.instagram);
+	if (ig)
 		canales.push({
 			label: "Instagram",
-			handle: handleDeUrl(brand.instagram, "@"),
-			url: brand.instagram,
+			handle: handleDeUrl(ig, "@"),
+			url: ig,
 			emoji: "📸",
 		});
-	if (brand.linkedin)
+
+	const li = safeHttpUrl(brand.linkedin);
+	if (li)
 		canales.push({
 			label: "LinkedIn",
-			handle: handleDeUrl(brand.linkedin, ""),
-			url: brand.linkedin,
+			handle: handleDeUrl(li, ""),
+			url: li,
 			emoji: "💼",
 		});
+
 	return canales;
 }
 
