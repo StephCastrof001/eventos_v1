@@ -37,7 +37,7 @@ export default function AdminLoginPage() {
 			<div className="w-full max-w-sm rounded-2xl border border-gray-800 bg-gray-900/40 p-8">
 				<h1 className="text-2xl font-bold mb-2">Acceso admin</h1>
 				<p className="text-sm text-gray-400 mb-6">
-					Ingresá con el correo y la contraseña del equipo.
+					Ingresa con el correo y la contraseña del equipo.
 				</p>
 
 				<form onSubmit={onSubmit} className="flex flex-col gap-4">

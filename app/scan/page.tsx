@@ -71,7 +71,7 @@ export default function ScanPage(props: {
 								} else if (res.status === 401) {
 									setLastResult({
 										ok: false,
-										message: "Sesión expirada — volvé a entrar al admin",
+										message: "Sesión expirada — vuelve a entrar al admin",
 									});
 								} else {
 									setLastResult({

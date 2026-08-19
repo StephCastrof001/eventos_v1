@@ -52,7 +52,7 @@ export function RegisterForm({
 					const firstErr = data.error.fieldErrors[firstKey]?.[0];
 					setErrorMsg(`${firstKey}: ${firstErr}`);
 				} else {
-					setErrorMsg("Algo falló. Revisá los datos e intentá de nuevo.");
+					setErrorMsg("Algo falló. Revisa los datos e intenta de nuevo.");
 				}
 			}
 		} catch {
@@ -141,7 +141,7 @@ export function RegisterForm({
 			</button>
 			{status === "error" && (
 				<p className="text-sm text-red-400">
-					{errorMsg || "Algo falló. Revisá los datos e intentá de nuevo."}
+					{errorMsg || "Algo falló. Revisa los datos e intenta de nuevo."}
 				</p>
 			)}
 		</form>
