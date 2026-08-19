@@ -36,3 +36,9 @@ badge-hackia.png
 
 # claves privadas
 *.pem
+
+.vercel
+.env*
+
+# previews locales de emails (scripts/preview-reminder.ts)
+.preview/

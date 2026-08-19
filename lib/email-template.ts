@@ -199,7 +199,7 @@ export interface ReminderEmailInput {
 	eventName: string;
 	/** Fecha ya formateada, ej. "miércoles 19 de agosto, 19:00 - 21:00". */
 	dateStr: string;
-	/** Días restantes al evento. Valores esperados: 10 | 5 | 1. */
+	/** Días restantes al evento. `0` = hoy es el día del evento. */
 	daysBefore: number;
 	/** URL a la agenda del evento; genera el botón "Ver agenda". */
 	agendaUrl: string;
@@ -230,8 +230,42 @@ export interface ReminderEmailInput {
 	} | null;
 }
 
+/** Copy del recordatorio según cuánto falta: hoy, mañana, o todavía faltan días. */
+function reminderCopy(
+	daysBefore: number,
+	eventName: string,
+): { subject: string; titulo: string; intro: string; cierre: string } {
+	if (daysBefore === 0) {
+		// El día del evento el titular va entero en una línea: es la frase que
+		// se lee de un vistazo en la bandeja y en la notificación del celular.
+		return {
+			subject: `¡Es hoy! Nos vemos hoy en el ${eventName} 🚀`,
+			titulo: `¡Es hoy! Nos vemos hoy en el ${eventName} 🚀`,
+			intro:
+				"Aquí tienes todo lo que necesitas para tu ingreso, revísalo antes de salir.",
+			cierre: "¡Nos vemos en unas horas!",
+		};
+	}
+	if (daysBefore === 1) {
+		return {
+			subject: `Mañana nos vemos — ${eventName}`,
+			titulo: "¡Mañana nos vemos! 🚀",
+			intro:
+				"Es mañana. Queremos que tengas todo listo para disfrutar al máximo esta experiencia.",
+			cierre: "¡Nos vemos muy pronto!",
+		};
+	}
+	return {
+		subject: `Nos vemos en el ${eventName}`,
+		titulo: "Nos vemos muy pronto 🚀",
+		intro:
+			"Estamos a solo unos días de vivir esta experiencia y queremos que llegues con todo listo.",
+		cierre: "¡Nos vemos muy pronto!",
+	};
+}
+
 /**
- * Email de recordatorio al evento (10/5/1 días antes).
+ * Email de recordatorio al evento (0 = hoy, 1 = víspera, N días antes).
  * Reutiliza emailShell y escapeHtml del módulo. Valida esquemas URL (http/https).
  */
 export function buildReminderEmail(input: ReminderEmailInput): {
@@ -248,24 +282,17 @@ export function buildReminderEmail(input: ReminderEmailInput): {
 	}
 	const safeAgendaUrl = escapeHtml(parsedAgenda.toString());
 
-	// La víspera merece su propio tono; el resto comparte el "faltan pocos días".
-	const esVispera = input.daysBefore === 1;
-	const subject = esVispera
-		? `Mañana nos vemos — ${input.eventName}`
-		: `Nos vemos en el ${input.eventName}`;
-	const titulo = esVispera
-		? "¡Mañana nos vemos! 🚀"
-		: "Nos vemos muy pronto 🚀";
-	const intro = esVispera
-		? "Es mañana. Queremos que tengas todo listo para disfrutar al máximo esta experiencia."
-		: "Estamos a solo unos días de vivir esta experiencia y queremos que llegues con todo listo.";
+	const { subject, titulo, intro, cierre } = reminderCopy(
+		input.daysBefore,
+		input.eventName,
+	);
 
 	const entradaCtaHtml = buildEntradaCta(input.entradaUrl);
 	const locationHtml = buildLocationRow(input.location, input.locationUrl);
 	const instructionsHtml = buildInstructionsRows(input.instructions);
 
 	const body = `
-    <h1 style="margin:0 0 16px 0; font-size:24px; color:#e8e8f0;">${titulo}</h1>
+    <h1 style="margin:0 0 16px 0; font-size:24px; line-height:1.3; color:#e8e8f0;">${escapeHtml(titulo)}</h1>
     <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">¡Hola <strong style="color:#e8e8f0;">${safeName}</strong>!</p>
     <p style="margin:0 0 12px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">${intro}</p>
     <p style="margin:0 0 4px 0; font-size:16px; line-height:1.6; color:#c9c9d6;">Estos son los detalles más importantes para tu asistencia:</p>
@@ -277,7 +304,7 @@ export function buildReminderEmail(input: ReminderEmailInput): {
     </td></tr></table>
     ${entradaCtaHtml}
     ${buildCommunityBlock(input.community)}
-    <p style="margin:28px 0 0 0; font-size:15px; line-height:1.6; color:#c9c9d6;">¡Nos vemos muy pronto!</p>
+    <p style="margin:28px 0 0 0; font-size:15px; line-height:1.6; color:#c9c9d6;">${cierre}</p>
     <p style="margin:4px 0 0 0; font-size:15px; line-height:1.6; color:#9a9ab0;">Con cariño,<br><strong style="color:#e8e8f0;">Comunidad HACK IA</strong></p>`;
 
 	return {

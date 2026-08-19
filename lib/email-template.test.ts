@@ -57,6 +57,19 @@ describe("buildReminderEmail", () => {
 		expect(html).toContain("Es mañana.");
 	});
 
+	it("el día del evento (0) tiene su propio copy", () => {
+		const { subject, html } = buildReminderEmail({
+			...BASE_REMINDER,
+			daysBefore: 0,
+		});
+		expect(subject).toBe("¡Es hoy! Nos vemos hoy en el HACK IA Summit 🚀");
+		expect(html).toContain("¡Es hoy! Nos vemos hoy en el HACK IA Summit 🚀");
+		expect(html).toContain("¡Nos vemos en unas horas!");
+		// El copy de antesala mentiría el día del evento.
+		expect(html).not.toContain("a solo unos días");
+		expect(html).not.toContain("Es mañana.");
+	});
+
 	it("los días previos comparten subject y título de antesala", () => {
 		for (const daysBefore of [2, 5, 10]) {
 			const { subject, html } = buildReminderEmail({
