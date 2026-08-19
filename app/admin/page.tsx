@@ -38,10 +38,10 @@ export default async function AdminPage(props: {
 				<div className="max-w-6xl mx-auto relative z-10">
 					<header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
 						<div>
-							<h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+							<h1 className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent md:text-5xl">
 								Eventos Activos
 							</h1>
-							<p className="mt-3 text-lg text-white/50">
+							<p className="mt-2 text-white/50 md:mt-3 md:text-lg">
 								Selecciona un evento para gestionar sus invitados.
 							</p>
 						</div>
@@ -75,31 +75,31 @@ export default async function AdminPage(props: {
 			<div className="min-h-screen bg-[#0c0c14] text-[#e8e8f0] font-sans selection:bg-[#6f5ff2]/30 p-4 md:p-8 relative overflow-hidden">
 				<div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-[#6f5ff2]/10 rounded-full blur-[120px] pointer-events-none" />
 				<div className="max-w-6xl mx-auto relative z-10">
-					<header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+					<header className="mb-6 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
 						<div>
 							<a
 								href="/admin"
-								className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white mb-4 transition-colors"
+								className="mb-3 inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white"
 							>
 								← Volver a Eventos
 							</a>
-							<h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+							<h1 className="text-2xl font-extrabold tracking-tight text-white md:text-4xl">
 								Panel de Invitados
 							</h1>
-							<p className="mt-2 text-white/50">
+							<p className="mt-1 text-sm text-white/50 md:mt-2 md:text-base">
 								Gestiona los accesos al evento.
 							</p>
 						</div>
-						<div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+						<div className="flex flex-wrap items-center gap-3">
 							<a
 								href={`/admin/export?eventId=${eventId}`}
 								target="_blank"
 								rel="noopener noreferrer"
-								className="px-4 py-2.5 rounded-lg bg-[#00cfaa]/10 text-[#00cfaa] border border-[#00cfaa]/20 hover:bg-[#00cfaa]/20 transition-colors font-semibold text-sm flex items-center gap-2 shadow-[0_0_15px_rgba(0,207,170,0.1)] hover:shadow-[0_0_20px_rgba(0,207,170,0.2)]"
+								className="flex items-center gap-2 rounded-lg border border-[#00cfaa]/20 bg-[#00cfaa]/10 px-4 py-2.5 text-sm font-semibold text-[#00cfaa] shadow-[0_0_15px_rgba(0,207,170,0.1)] transition-colors hover:bg-[#00cfaa]/20"
 							>
 								📥 Exportar CSV
 							</a>
-							<div className="px-4 py-2.5 rounded-full bg-white/[0.03] border border-white/[0.05] text-sm text-white/60">
+							<div className="rounded-full border border-white/[0.05] bg-white/[0.03] px-4 py-2.5 text-sm text-white/60">
 								Total:{" "}
 								<strong className="text-white">{guests?.length || 0}</strong>
 							</div>
