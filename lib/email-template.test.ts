@@ -62,7 +62,9 @@ describe("buildReminderEmail", () => {
 			...BASE_REMINDER,
 			daysBefore: 0,
 		});
-		expect(subject).toBe("¡Es hoy! Nos vemos hoy en el HACK IA Summit 🚀");
+		expect(subject).toBe(
+			"¡Es hoy! Nos vemos hoy en el HACK IA Summit — estamos a horas del evento",
+		);
 		expect(html).toContain("¡Es hoy! Nos vemos hoy en el HACK IA Summit 🚀");
 		expect(html).toContain("¡Nos vemos en unas horas!");
 		// El copy de antesala mentiría el día del evento.

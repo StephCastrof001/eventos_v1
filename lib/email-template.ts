@@ -239,10 +239,10 @@ function reminderCopy(
 		// El día del evento el titular va entero en una línea: es la frase que
 		// se lee de un vistazo en la bandeja y en la notificación del celular.
 		return {
-			subject: `¡Es hoy! Nos vemos hoy en el ${eventName} 🚀`,
+			subject: `¡Es hoy! Nos vemos hoy en el ${eventName} — estamos a horas del evento`,
 			titulo: `¡Es hoy! Nos vemos hoy en el ${eventName} 🚀`,
 			intro:
-				"Aquí tienes todo lo que necesitas para tu ingreso, revísalo antes de salir.",
+				"Estamos a horas del evento. Aquí tienes todo lo que necesitas para tu ingreso, revísalo antes de salir.",
 			cierre: "¡Nos vemos en unas horas!",
 		};
 	}
