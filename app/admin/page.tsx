@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { EventCard } from "@/components/admin/EventCard";
 import { GuestTable } from "@/components/admin/GuestTable";
 import { getEventGuests, getEvents } from "@/lib/api/admin";
+import { getTalleres } from "@/lib/api/cursos";
 import { getEnv } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
 
@@ -30,7 +31,7 @@ export default async function AdminPage(props: {
 	}
 
 	if (!eventId) {
-		const events = await getEvents();
+		const [events, talleres] = await Promise.all([getEvents(), getTalleres()]);
 		return (
 			<div className="min-h-screen bg-[#0c0c14] text-[#e8e8f0] font-sans selection:bg-[#6f5ff2]/30 p-6 md:p-12 relative overflow-hidden">
 				<div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#6f5ff2]/20 rounded-full blur-[120px] pointer-events-none" />
@@ -63,6 +64,38 @@ export default async function AdminPage(props: {
 							</div>
 						)}
 					</div>
+
+					{/* Talleres pagos (repo eventos_v3). Mismo panel y mismo login: quien
+					    entra con la allowlist ve los eventos gratuitos y también estos. */}
+					{talleres.length > 0 && (
+						<section className="mt-12">
+							<h2 className="mb-4 text-xl font-bold text-white/80">
+								Talleres pagos
+							</h2>
+							<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+								{talleres.map((t) => (
+									<a
+										key={t.id}
+										href={`/admin/curso/${t.slug}`}
+										className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-[#00cfaa]/50"
+									>
+										<p className="font-bold text-white">{t.nombre}</p>
+										<p className="mt-1 text-sm capitalize text-white/50">
+											{new Intl.DateTimeFormat("es-PE", {
+												day: "numeric",
+												month: "long",
+												year: "numeric",
+												timeZone: "America/Lima",
+											}).format(new Date(t.inicio_at))}
+										</p>
+										<p className="mt-3 text-xs text-[#00cfaa]">
+											Ver inscritos →
+										</p>
+									</a>
+								))}
+							</div>
+						</section>
+					)}
 				</div>
 			</div>
 		);

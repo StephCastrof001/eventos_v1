@@ -32,8 +32,8 @@ describe("validatePhoto", () => {
 		expect(validatePhoto({ type: "image/jpeg", size: 4_600_000 }).ok).toBe(
 			false,
 		);
-		expect(validatePhoto({ type: "image/jpeg", size: MAX_PHOTO_BYTES }).ok).toBe(
-			true,
-		);
+		expect(
+			validatePhoto({ type: "image/jpeg", size: MAX_PHOTO_BYTES }).ok,
+		).toBe(true);
 	});
 });
