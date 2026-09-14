@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getEventGuests } from "@/lib/api/admin";
+import { armarCsv } from "@/lib/csv";
 import { getEnv } from "@/lib/env";
 import { createServerSupabase } from "@/lib/supabase/server";
 
@@ -62,17 +63,7 @@ export async function GET(request: Request) {
 			g.created_at || "",
 		]);
 
-		const csvContent = [headers, ...rows]
-			.map((row) =>
-				row
-					.map((cell) => {
-						// Escape comillas y envolver en comillas
-						const str = String(cell).replace(/"/g, '""');
-						return `"${str}"`;
-					})
-					.join(","),
-			)
-			.join("\n");
+		const csvContent = armarCsv(headers, rows);
 
 		// Retornar CSV
 		return new NextResponse(csvContent, {
