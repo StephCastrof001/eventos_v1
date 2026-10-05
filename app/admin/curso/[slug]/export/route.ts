@@ -64,6 +64,7 @@ export async function GET(
 		"WhatsApp",
 		"Centro de labores",
 		"Cargo",
+		"Referido",
 		"Pagado",
 		"Fecha de inscripcion",
 	];
@@ -76,6 +77,7 @@ export async function GET(
 		i.telefono,
 		i.centro_labores,
 		i.cargo,
+		i.referido,
 		i.pagado ? "SI" : "NO",
 		i.created_at,
 	]);

@@ -14,6 +14,7 @@ function haystack(i: InscritoRow): string {
 		i.dni,
 		i.centro_labores,
 		i.cargo,
+		i.referido,
 	]
 		.filter(Boolean)
 		.join(" ")
@@ -58,6 +59,9 @@ export function InscritosTable({
 }) {
 	const [query, setQuery] = useState("");
 	const [soloPendientes, setSoloPendientes] = useState(false);
+	// Para decidir vacantes: los que llegaron referidos arriba. El orden entre
+	// ellos (y entre los demás) se mantiene, que es el de inscripción.
+	const [referidosPrimero, setReferidosPrimero] = useState(false);
 
 	const indexed = useMemo(
 		() => inscritos.map((i) => ({ i, text: normalize(haystack(i)) })),
@@ -66,13 +70,18 @@ export function InscritosTable({
 
 	const filtered = useMemo(() => {
 		const terms = normalize(query.toLowerCase()).split(/\s+/).filter(Boolean);
-		return indexed
+		const lista = indexed
 			.filter((r) => terms.every((t) => r.text.includes(t)))
 			.map((r) => r.i)
 			.filter((i) => !soloPendientes || !i.pagado);
-	}, [indexed, query, soloPendientes]);
+		if (!referidosPrimero) return lista;
+		return [...lista].sort(
+			(a, b) => Number(Boolean(b.referido)) - Number(Boolean(a.referido)),
+		);
+	}, [indexed, query, soloPendientes, referidosPrimero]);
 
 	const pagados = inscritos.filter((i) => i.pagado).length;
+	const referidos = inscritos.filter((i) => i.referido).length;
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -93,6 +102,14 @@ export function InscritosTable({
 							onChange={(e) => setSoloPendientes(e.target.checked)}
 						/>
 						Solo sin pagar
+					</label>
+					<label className="flex items-center gap-2">
+						<input
+							type="checkbox"
+							checked={referidosPrimero}
+							onChange={(e) => setReferidosPrimero(e.target.checked)}
+						/>
+						Referidos primero ({referidos})
 					</label>
 					<span>
 						{pagados} pagados de {inscritos.length}
@@ -119,6 +136,9 @@ export function InscritosTable({
 							<div className="text-xs text-white/40">
 								<p>📱 {i.telefono}</p>
 								{i.dni && <p>🪪 {i.dni}</p>}
+								{i.referido && (
+									<p className="truncate text-[#a99bff]">🔗 {i.referido}</p>
+								)}
 								{i.centro_labores && (
 									<p className="truncate">
 										🏢 {i.centro_labores}
@@ -135,14 +155,16 @@ export function InscritosTable({
 					<table className="w-full border-collapse whitespace-nowrap text-left">
 						<thead>
 							<tr className="border-b border-white/[0.05] bg-white/[0.03]">
-								{["Inscrito", "Contacto", "Trabajo", "Pago"].map((h) => (
-									<th
-										key={h}
-										className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/40"
-									>
-										{h}
-									</th>
-								))}
+								{["Inscrito", "Contacto", "Trabajo", "Referido", "Pago"].map(
+									(h) => (
+										<th
+											key={h}
+											className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/40"
+										>
+											{h}
+										</th>
+									),
+								)}
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-white/[0.02]">
@@ -172,6 +194,10 @@ export function InscritosTable({
 												{i.cargo}
 											</div>
 										)}
+									</td>
+									{/* Vacío si no puso nada: no tener referido no es un dato. */}
+									<td className="px-6 py-4 text-sm text-[#a99bff]">
+										{i.referido}
 									</td>
 									<td className="px-6 py-4">
 										<CheckPagado inscrito={i} slug={slug} />

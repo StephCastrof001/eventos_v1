@@ -25,6 +25,8 @@ export interface InscritoRow {
 	telefono: string;
 	centro_labores: string | null;
 	cargo: string | null;
+	/** Código, canal o nombre de quien lo refirió. NULL si no puso nada. */
+	referido: string | null;
 	pagado: boolean;
 	created_at: string;
 }
@@ -64,7 +66,7 @@ export async function getInscritos(tallerId: string): Promise<InscritoRow[]> {
 	const { data, error } = await sb
 		.from("inscritos")
 		.select(
-			"id, nombres, apellidos, dni, email, telefono, centro_labores, cargo, pagado, created_at",
+			"id, nombres, apellidos, dni, email, telefono, centro_labores, cargo, referido, pagado, created_at",
 		)
 		.eq("taller_id", tallerId)
 		.order("created_at", { ascending: false });
